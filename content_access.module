@@ -49,10 +49,8 @@ function content_access_perm() {
  * Implementation of hook_node_grants()
  */
 function content_access_node_grants($account, $op) {
-  return array(
-    'content_access_rid' => array_keys($account->roles),
-    'content_access_author' => array($account->uid),
-  );
+  $return = array('content_access_rid' => array_keys($account->roles));
+  return $account->uid ? array('content_access_author' => array($account->uid)) + $return : $return;
 }
 
 /*
@@ -525,7 +523,7 @@ function content_access_optimize_grants(&$grants, $node) {
   }
   $edit_perm_roles = content_access_get_permission_access('edit '. $node->type .' content');
   $edit_own_roles = content_access_get_permission_access('edit own '. $node->type .' content');
-  if (count(array_diff($all, $edit_own_roles)) == 0) {
+  if (in_array(DRUPAL_AUTHENTICATED_RID, $edit_own_roles)) {
     $edit_perm_roles[] = 'author';
   }
   foreach (array('update', 'delete') as $op) {
