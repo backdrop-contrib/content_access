@@ -326,7 +326,7 @@ function content_access_disabling($set = NULL) {
 
 /*
  * Returns the content_access' settings
- * @param $return One of the content_access_available_settings(), e.g. user_edit, register or weight
+ * @param $return One of the content_access_available_settings(), e.g. 'view' or 'pernode'
  * @param $type If not all, return the setting for the specified type
  */
 function content_access_get_settings($return = 'all', $type = NULL) {
@@ -335,11 +335,11 @@ function content_access_get_settings($return = 'all', $type = NULL) {
   }
   if (isset($type)) {
     $settings = content_access_get_settings($return);
-    return $settings[$type];
+    return isset($settings[$type]) ? $settings[$type] : content_access_get_setting_defaults($return, $type);
   }
   if (!isset($type)) {
     $settings = content_access_get_settings();
-    return $settings[$return];
+    return isset($settings[$return]) ? $settings[$return] : array();
   }
   return array();
 }
@@ -365,7 +365,7 @@ function content_access_set_settings($settings) {
  * returns an array containing all available content_access settings
  */
 function content_access_available_settings() {
-  return array('enabled', 'view', 'update', 'delete', 'per_node', 'priority');
+  return array('view', 'update', 'delete', 'per_node', 'priority');
 }
 
 /*
