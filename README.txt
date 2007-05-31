@@ -34,3 +34,15 @@ least version 1.4 of the module. To make use of Access Control Lists you'll need
 access control settings for a content type. At the access control tab of such a node you'll be
 able to grant single users view, edit or delete permission for this node.
 
+ 
+
+Enabling this module on big sites
+----------------------------------
+Drupal 5.1 uses a lot of memory, as soon as you enable this, or any other node access module on a
+site with a lot of existing nodes, which means thousands of nodes. This is problem of drupal itself,
+and is fixed in the latest development snapshot of 5.x (http://drupal.org/node/108752).
+So if you are experiencing memory issues or you are planning to enable this on such a big site update
+to the latest development snapshot of drupal 5.x before. 
+You can find it here: http://drupal.org/project/drupal
+
+If drupal 5.2 is already released at the time you read that, it will also contain the fix.
