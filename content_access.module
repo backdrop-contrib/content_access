@@ -64,6 +64,7 @@ function content_access_node_grants($account, $op) {
 function content_access_page($nid) {
   $roles = content_access_get_roles_and_author();
   $node = node_load($nid);
+  drupal_set_title(check_plain($node->title));
 
   $form['settings'] = array(
     '#type' => 'fieldset', 
