@@ -33,7 +33,7 @@ function content_access_menu($may_cache) {
           'description' => t('Configure content access control.'),
           'callback' => 'drupal_get_form',
           'callback arguments' => array('content_access_admin_settings', $type),
-          'access' => user_access('administer nodes'),
+          'access' => user_access('administer nodes') && user_access('administer content types'),
           'type' => MENU_LOCAL_TASK,
           'weight' => 2,
         );
