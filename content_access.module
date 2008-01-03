@@ -275,12 +275,8 @@ function content_access_node_access_records($node, $optimize = TRUE) {
     //this means we grant no access
     $grants[] = array('grant_view' => 0, 'realm' => 'content_access_rid', 'gid' => 0);
   }
-  else if ($optimize && content_access_optimize_grants($grants, $node)) {
-    if(empty($grants)) {
-      //insert default permissons: 1,0,0
-      $grants = array(array('realm' => 'all', 'gid' => 0, 'grant_view' => 1, 'grant_update' => 0, 'grant_delete' => 0,
-        'priority' => content_access_get_settings('priority', $node->type)));
-    }
+  else if ($optimize) {
+    content_access_optimize_grants($grants, $node);
   }
   return $grants;
 }
@@ -437,7 +433,7 @@ function content_access_get_default_grant($node) {
     $defaults[$node->type] = $grants;
   }
   //we might have to update the author uid before returning the grants
-  else if(isset($defaults[$node->type]['author'])) {
+  else if (isset($defaults[$node->type]['author'])) {
     $defaults[$node->type]['author']['gid'] = $node->uid;
   }
 
@@ -525,7 +521,9 @@ function content_access_optimize_grants(&$grants, $node) {
   //compare the permissions
   $all = array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID);
   if (count(array_diff($all, $view)) == 0) {
-    $view = $all;
+    //grant view access to all instead of single roles
+    $view = array('all');
+    $grants['all'] = array('realm' => 'all', 'gid' => 0, 'grant_view' => 1, 'grant_update' => 0, 'grant_delete' => 0, 'priority' => content_access_get_settings('priority', $node->type));
   }
   $edit_perm_roles = content_access_get_permission_access('edit '. $node->type .' content');
   $edit_own_roles = content_access_get_permission_access('edit own '. $node->type .' content');
@@ -537,20 +535,15 @@ function content_access_optimize_grants(&$grants, $node) {
   }
   //$view, $update and $delete contain now only the necessary rids/author
   //so let's remove unnecessary grants, if any
-  if ($view == $all && empty($update) && empty($delete)) {
-    $grants = array();
-  }
-  else {
-    foreach ($grants as $key => $grant) {
-      foreach (array('view', 'update', 'delete') as $op) {
-        if ($grant['grant_'. $op] && in_array($key, $$op)) {
-          //it's still here, so we can't remove this grant
-          continue 2;
-        }
+  foreach ($grants as $key => $grant) {
+    foreach (array('view', 'update', 'delete') as $op) {
+      if ($grant['grant_'. $op] && in_array($key, $$op)) {
+        //it's still here, so we can't remove this grant
+        continue 2;
       }
-      //ok, remove it
-      unset($grants[$key]);
     }
+    //ok, remove it
+    unset($grants[$key]);
   }
 }
 
