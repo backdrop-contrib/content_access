@@ -33,14 +33,14 @@ function content_access_action_info() {
       '#arguments' => array(
         'node' => array('#entity' => 'node', '#label' => t('Content')),
       ),
-      '#module' => t('Content access'),
+      '#module' => 'Content access',
     ),
     'content_access_action_reset_node_permissions' => array(
       '#label' => t('Reset content permissions'),
       '#arguments' => array(
         'node' => array('#entity' => 'node', '#label' => t('Content')),
       ),
-      '#module' => t('Content access'),
+      '#module' => 'Content access',
     ),
   );
 }
@@ -98,7 +98,7 @@ function content_access_condition_info() {
       'node' => array('#entity' => 'node', '#label' => t('Content')),
     ),
     '#description' => t('Evaluates to TRUE, if content access allows all selected operations for the given roles.'),
-    '#module' => t('Content access'),
+    '#module' => 'Content access',
     ),
   );
 }
