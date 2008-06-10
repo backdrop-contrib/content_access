@@ -620,3 +620,20 @@ function content_access_node_type($op, $info) {
       break;
   }
 }
+
+/**
+ * Implementation of hook_node_access_explain
+ */
+function content_access_node_access_explain($row) {
+  static $interpretations = array();
+  switch ($row->realm) {
+    case 'content_access_author':  
+      $interpretations[$row->gid] = t('Content access: author of the content can access');
+      break;
+    case 'content_access_rid':
+      $roles = user_roles();
+      $interpretations[$row->gid] = t('Content access: ') . $roles[$row->gid] . t(' can access');
+      break;  
+  }
+  return $interpretations[$row->gid];
+}
