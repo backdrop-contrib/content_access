@@ -4,23 +4,8 @@
  * Implementation of hook_install
  */
 function content_access_install() {
-  switch ($GLOBALS['db_type']) {
-    case 'mysql':
-    case 'mysqli':
-      db_query("CREATE TABLE {content_access} (
-          nid int(10) unsigned NOT NULL default '0',
-          settings mediumtext NOT NULL,
-          PRIMARY KEY (nid)
-        ) /*!40100 DEFAULT CHARACTER SET utf8 */;");
-      break;
-    case 'pgsql':
-      db_query("CREATE TABLE {content_access} (
-        nid int_unsigned NOT NULL default '0',
-        settings text NOT NULL,
-        PRIMARY KEY (nid)
-      )");
-    break;
-  }
+  // Create tables.
+  drupal_install_schema('content_access');
 }
 
 /*
@@ -28,5 +13,28 @@ function content_access_install() {
  */
 function content_access_uninstall() {
   variable_del('content_access_settings');
-  db_query('DROP TABLE {content_access}'); 
+  // Remove tables.
+  drupal_uninstall_schema('content_access');
+}
+ /*
+  * Implementation of hook_schema
+  */
+function content_access_schema() {
+  $schema['content_access'] = array(
+    'fields' => array(
+      'nid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0
+        ),
+      'settings' => array(
+        'type' => 'text',
+        'not null' => FALSE,
+        'size' => 'medium'
+        ),
+    ),
+    'primary key' => array('nid')
+  );
+  return $schema;
 }

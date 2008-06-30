@@ -2,3 +2,4 @@
 name = Content Access
 description = Provides flexible content access control
 package = Access control
+core = "6.x"
