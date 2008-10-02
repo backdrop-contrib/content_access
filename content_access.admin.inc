@@ -11,74 +11,13 @@
 function content_access_page(&$form_state, $node) {
   drupal_set_title(t('Access control for %title', array('%title' => $node->title)));
 
-  foreach (array('view', 'update', 'delete') as $i) {
-    $defaults[$i] = content_access_per_node_setting($i, $node);
+  foreach (array('view', 'view_own', 'update', 'update_own', 'delete', 'delete_own') as $op) {
+    $defaults[$op] = content_access_per_node_setting($op, $node);
   }
 
-  $form = content_access_page_form($defaults, $node);
+  $form = content_access_role_based_form($defaults);
 
-  $form_state['node'] = $node;
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Submit'),
-    '#weight' => 10,
-  );
-  return $form;
-}
-
-/**
- * Builds per node setting page form without requiring a node. Used by
- * content_access_action_set_node_permissions_form().
- *
- * @param $defaults
- *   Array of defaults for view/update/delete checkboxes.
- * @param $node
- *   Optional node for ACL.
- */
-function content_access_page_form($defaults = array(), $node = FALSE) {
-
-  // Make sure defaults array is full.
-  foreach (array('view', 'update', 'delete') as $op) {
-    if (!isset($defaults[$op])) $defaults[$op] = array();
-  }
-
-  $roles = user_roles();
-  $form['settings'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Role access control settings'),
-    '#collapsible' => TRUE,
-  );
-
-  if (!$node) {
-    $form['settings']['#description'] = t('Warning: No defaults are set; be sure to fill out all boxes appropriately.');
-  }
-
-  drupal_add_css(drupal_get_path('module', 'content_access') . '/content_access.css');
-  $form['settings']['view'] = array('#type' => 'checkboxes',
-    '#prefix' => '<div class="content_access-div">',
-    '#suffix' => '</div>',
-    '#options' => $roles,
-    '#title' => t('View'),
-    '#default_value' => $defaults['view'],
-  );
-  $form['settings']['update'] = array('#type' => 'checkboxes',
-    '#prefix' => '<div class="content_access-div">',
-    '#suffix' => '</div>',
-    '#options' => $roles,
-    '#title' => t('Edit'),
-    '#default_value' => $defaults['update'],
-  );
-  $form['settings']['delete'] = array('#type' => 'checkboxes',
-    '#prefix' => '<div class="content_access-div">',
-    '#suffix' => '</div>',
-    '#options' => $roles,
-    '#title' => t('Delete'),
-    '#default_value' => $defaults['delete'],
-  );
-  $form['settings']['clearer'] = array(
-    '#value' => '<br clear="all" />',
-  );
-  if (module_exists('acl') && $node) {
+  if (module_exists('acl')) {
     // This is disabled when there is no node passed.
     $form['acl'] = array(
       '#type' => 'fieldset',
@@ -98,8 +37,16 @@ function content_access_page_form($defaults = array(), $node = FALSE) {
       $form['acl'][$op]['#collapsed'] = !isset($_POST['acl'][$op]['add_button']) && !isset($_POST['acl'][$op]['delete_button']);
     }
   }
+
+  $form_state['node'] = $node;
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Submit'),
+    '#weight' => 10,
+  );
   return $form;
 }
+
 
 function content_access_page_submit($form_id, &$form_state) {
   $form_values = $form_state['values'];
@@ -128,63 +75,14 @@ function content_access_page_submit($form_id, &$form_state) {
  */
 function content_access_admin_settings(&$form_state, $type) {
   $form_state['type'] = $type;
-  $roles = user_roles();
-  // Per type:
-  $form['type'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Content type access control settings'),
-    '#collapsible' => TRUE,
-    '#description' => t('Note that users need at leat the @access_content permission to be able to deal in any way with content.', array('@access_content' => t('access content'))),
-  );
-  drupal_add_css(drupal_get_path('module', 'content_access') . '/content_access.css');
-  $form['type']['view'] = array('#type' => 'checkboxes',
-    '#prefix' => '<div class="content_access-div">',
-    '#suffix' => '</div>',
-    '#options' => $roles,
-    '#title' => t('View any content'),
-    '#default_value' => content_access_get_settings('view', $type),
-  );
-  $form['type']['update'] = array('#type' => 'checkboxes',
-    '#prefix' => '<div class="content_access-div">',
-    '#suffix' => '</div>',
-    '#options' => $roles,
-    '#title' => t('Edit any content'),
-    '#default_value' => content_access_get_settings('update', $type),
-  );
-  $form['type']['delete'] = array('#type' => 'checkboxes',
-    '#prefix' => '<div class="content_access-div">',
-    '#suffix' => '</div>',
-    '#options' => $roles,
-    '#title' => t('Delete any content'),
-    '#default_value' => content_access_get_settings('delete', $type),
-  );
-  $form['type']['clearer'] = array(
-    '#value' => '<br clear="all" />',
-  );
-  $form['type']['view_own'] = array('#type' => 'checkboxes',
-    '#prefix' => '<div class="content_access-div">',
-    '#suffix' => '</div>',
-    '#options' => $roles,
-    '#title' => t('View own content'),
-    '#default_value' => content_access_get_settings('view_own', $type),
-  );
-  $form['type']['update_own'] = array('#type' => 'checkboxes',
-    '#prefix' => '<div class="content_access-div">',
-    '#suffix' => '</div>',
-    '#options' => $roles,
-    '#title' => t('Edit own content'),
-    '#default_value' => content_access_get_settings('update_own', $type),
-  );
-  $form['type']['delete_own'] = array('#type' => 'checkboxes',
-    '#prefix' => '<div class="content_access-div">',
-    '#suffix' => '</div>',
-    '#options' => $roles,
-    '#title' => t('Delete own content'),
-    '#default_value' => content_access_get_settings('delete_own', $type),
-  );
-  $form['type']['clearer'] = array(
-    '#value' => '<br clear="all" />',
-  );
+
+  // Add role based per content type settings
+  $defaults = array();
+  foreach (array('view', 'view_own', 'update', 'update_own', 'delete', 'delete_own') as $op) {
+    $defaults[$op] = content_access_get_settings($op, $type);
+  }
+  $form = content_access_role_based_form($defaults);
+
   // Per node:
   $form['node'] = array(
     '#type' => 'fieldset',
@@ -280,4 +178,79 @@ function content_access_save_permissions($permissions) {
       db_query("INSERT INTO {permission} (rid, perm) VALUES (%d, '%s')", $rid, implode(', ', array_keys($perms)));
     }
   }
+}
+
+
+/**
+ * Builds the role based permission form for the given defaults.
+ *
+ * @param $defaults
+ *   Array of defaults for all operations.
+ */
+function content_access_role_based_form($defaults = array()) {
+
+  // Make sure defaults are set properly
+  foreach (array('view', 'view_own', 'update', 'update_own', 'delete', 'delete_own') as $op) {
+    $defaults += array($op => array());
+  }
+
+  $roles = user_roles();
+  // Per type:
+  $form['per_role'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Role based access control settings'),
+    '#collapsible' => TRUE,
+    '#description' => t('Note that users need at least the %access_content permission to be able to deal in any way with content.', array('%access_content' => t('access content'))),
+  );
+  drupal_add_css(drupal_get_path('module', 'content_access') . '/content_access.css');
+  $form['per_role']['view'] = array('#type' => 'checkboxes',
+    '#prefix' => '<div class="content_access-div">',
+    '#suffix' => '</div>',
+    '#options' => $roles,
+    '#title' => t('View any content'),
+    '#default_value' => $defaults['view'],
+  );
+  $form['per_role']['update'] = array('#type' => 'checkboxes',
+    '#prefix' => '<div class="content_access-div">',
+    '#suffix' => '</div>',
+    '#options' => $roles,
+    '#title' => t('Edit any content'),
+    '#default_value' => $defaults['update'],
+  );
+  $form['per_role']['delete'] = array('#type' => 'checkboxes',
+    '#prefix' => '<div class="content_access-div">',
+    '#suffix' => '</div>',
+    '#options' => $roles,
+    '#title' => t('Delete any content'),
+    '#default_value' => $defaults['delete'],
+  );
+  $form['per_role']['clearer'] = array(
+    '#value' => '<br clear="all" />',
+  );
+  $form['per_role']['view_own'] = array('#type' => 'checkboxes',
+    '#prefix' => '<div class="content_access-div">',
+    '#suffix' => '</div>',
+    '#options' => $roles,
+    '#title' => t('View own content'),
+    '#default_value' => $defaults['view_own'],
+  );
+  $form['per_role']['update_own'] = array('#type' => 'checkboxes',
+    '#prefix' => '<div class="content_access-div">',
+    '#suffix' => '</div>',
+    '#options' => $roles,
+    '#title' => t('Edit own content'),
+    '#default_value' => $defaults['update_own'],
+  );
+  $form['per_role']['delete_own'] = array('#type' => 'checkboxes',
+    '#prefix' => '<div class="content_access-div">',
+    '#suffix' => '</div>',
+    '#options' => $roles,
+    '#title' => t('Delete own content'),
+    '#default_value' => $defaults['delete_own'],
+  );
+  $form['per_role']['clearer'] = array(
+    '#value' => '<br clear="all" />',
+  );
+
+  return $form;
 }

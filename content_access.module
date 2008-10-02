@@ -315,8 +315,8 @@ function content_access_own_op($node, $any_roles, $own_roles) {
 
 
 /**
- * Returns the per node role settings. If no per node settings are available, it will return the
- * default settings.
+ * Returns the per node role settings. If no per node settings are available,
+ * it will return the content type settings.
  *
  * @param $op
  *   One of view, update or delete.
@@ -338,7 +338,7 @@ function content_access_per_node_setting($op, $node, $settings = NULL) {
   if (!isset($grants[$node->nid])) {
     $grants[$node->nid] = content_access_get_per_node_settings($node);
   }
-  // Apply the defaults if no per node settings are available
+  // Return the content type defaults if no per node settings are available
   return isset($grants[$node->nid][$op]) ? $grants[$node->nid][$op] : content_access_get_settings($op, $node->type);
 }
 
