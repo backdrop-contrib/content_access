@@ -60,8 +60,10 @@ function content_access_perm() {
  * Implementation of hook_node_grants().
  */
 function content_access_node_grants($account, $op) {
-  $return = array('content_access_rid' => array_keys($account->roles));
-  return $account->uid ? array('content_access_author' => array($account->uid)) + $return : $return;
+  return array(
+    'content_access_author' => array($account->uid),
+    'content_access_rid' => array_keys($account->roles),
+  );
 }
 
 /**
@@ -86,10 +88,19 @@ function content_access_node_access_records($node, $optimize = TRUE) {
     foreach ($grants as $rid => $grant) {
       $grants[$rid] = content_access_proccess_grant($grant, $rid, $node);
     }
+    // Care for the author grant.
+    $grant = array();
+    foreach (array('view', 'update', 'delete') as $op) {
+      $grant['grant_'. $op] = content_access_own_op($node, content_access_per_node_setting($op, $node), content_access_per_node_setting($op .'_own', $node));
+    }
+    if (array_filter($grant)) {
+      $grant['realm'] = 'content_access_author';
+      $grants[] = content_access_proccess_grant($grant, $node->uid, $node);
+    }
   }
   else {
     // Apply the content type defaults.
-    $grants = content_access_get_default_grant($node);
+    $grants = content_access_get_type_grant($node);
   }
 
   if (empty($grants)) {
@@ -245,7 +256,7 @@ function content_access_get_permission_by_op($op, $type) {
 /**
  * Returns the default grants for a given node type.
  */
-function content_access_get_default_grant($node) {
+function content_access_get_type_grant($node) {
   // Cache per type default grants in a static array
   static $defaults = array();
 
@@ -256,29 +267,50 @@ function content_access_get_default_grant($node) {
     // Only process the 'view' op as node_access() will take care of edit and delete
     foreach (content_access_get_settings('view', $node->type) as $rid) {
       $grants[$rid]['grant_view'] = 1;
-    }
-    foreach ($grants as $rid => $grant) {
-      $grants[$rid] = content_access_proccess_grant($grant, $rid, $node);
+      $grants[$rid] = content_access_proccess_grant($grants[$rid], $rid, $node);
     }
     $defaults[$node->type] = $grants;
   }
-  // We might have to update the author uid before returning the grants
-  elseif (isset($defaults[$node->type]['author'])) {
-    $defaults[$node->type]['author']['gid'] = $node->uid;
+
+  // Care for the author grant.
+  $grant = $grants = array();
+  $grant['grant_view'] = content_access_own_op($node, content_access_get_settings('view', $node->type), content_access_get_settings('view_own', $node->type));
+  if ($grant['grant_view']) {
+    $grant['realm'] = 'content_access_author';
+    $grants = array('author' => content_access_proccess_grant($grant, $node->uid, $node));
   }
 
-  return $defaults[$node->type];
+  return $defaults[$node->type] + $grants;
 }
 
 /**
  * Process a grant, which means add priority, realm and other properties.
  */
-function content_access_proccess_grant($grant, $rid, $node) {
-  $grant += array('grant_view' => 0, 'grant_update' => 0, 'grant_delete' => 0);
-  $grant['realm'] = ($rid == 'author') ? 'content_access_author' : 'content_access_rid';
-  $grant['gid'] = ($rid == 'author') ? $node->uid : $rid;
+function content_access_proccess_grant($grant, $gid, $node) {
+  $grant += array('grant_view' => 0, 'grant_update' => 0, 'grant_delete' => 0, 'realm' => 'content_access_rid');
+  $grant['gid'] = $gid;
   $grant['priority'] = content_access_get_settings('priority', $node->type);
   return $grant;
+}
+
+/**
+ * Determines the grant for the node author and the given allowed roles of a operation
+ */
+function content_access_own_op($node, $any_roles, $own_roles) {
+  static $roles = array();
+
+  if (!isset($roles[$node->uid])) {
+    $roles[$node->uid] = $node->uid ? array(DRUPAL_AUTHENTICATED_RID) : array(DRUPAL_ANONYMOUS_RID);
+    $result = db_query('SELECT rid FROM {users_roles} WHERE uid = %d', $node->uid);
+    while ($role = db_fetch_object($result)) {
+      $roles[$node->uid][] = $role->rid;
+    }
+  }
+  if (array_intersect($roles[$node->uid], $any_roles)) {
+    // If there is access due to "any permissions" there is no need to at an author grant.
+    return 0;
+  }
+  return array_intersect($roles[$node->uid], $own_roles) ? 1 : 0;
 }
 
 
