@@ -11,7 +11,7 @@
 function content_access_page(&$form_state, $node) {
   drupal_set_title(t('Access control for %title', array('%title' => $node->title)));
 
-  foreach (array('view', 'view_own', 'update', 'update_own', 'delete', 'delete_own') as $op) {
+  foreach (_content_access_get_operations() as $op) {
     $defaults[$op] = content_access_per_node_setting($op, $node);
   }
 
@@ -49,16 +49,14 @@ function content_access_page(&$form_state, $node) {
 
 
 function content_access_page_submit($form_id, &$form_state) {
-  $form_values = $form_state['values'];
-  $node = $form_state['node'];
   $settings = array();
-  foreach (array('view', 'update', 'delete') as $op) {
+  $node = $form_state['node'];
+  foreach (_content_access_get_operations() as $op) {
     // Set the settings so that further calls will return this settings.
-    unset($form_values[$op][0]);
-    $settings[$op] = array_filter($form_values[$op]);
+    $settings[$op] = array_filter($form_state['values'][$op]);
 
-    if (module_exists('acl') && isset($form_values['acl'][$op])) {
-      acl_save_form($form_values['acl'][$op]);
+    if (module_exists('acl') && isset($form_state['values']['acl'][$op])) {
+      acl_save_form($form_state['values']['acl'][$op]);
     }
   }
 
@@ -78,7 +76,7 @@ function content_access_admin_settings(&$form_state, $type) {
 
   // Add role based per content type settings
   $defaults = array();
-  foreach (array('view', 'view_own', 'update', 'update_own', 'delete', 'delete_own') as $op) {
+  foreach (_content_access_get_operations() as $op) {
     $defaults[$op] = content_access_get_settings($op, $type);
   }
   $form = content_access_role_based_form($defaults);
@@ -180,6 +178,12 @@ function content_access_save_permissions($permissions) {
   }
 }
 
+/**
+ * Returns an array of operations used by the module.
+ */
+function _content_access_get_operations() {
+  return array('view', 'view_own', 'update', 'update_own', 'delete', 'delete_own');
+}
 
 /**
  * Builds the role based permission form for the given defaults.
@@ -190,7 +194,7 @@ function content_access_save_permissions($permissions) {
 function content_access_role_based_form($defaults = array()) {
 
   // Make sure defaults are set properly
-  foreach (array('view', 'view_own', 'update', 'update_own', 'delete', 'delete_own') as $op) {
+  foreach (_content_access_get_operations() as $op) {
     $defaults += array($op => array());
   }
 

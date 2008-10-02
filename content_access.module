@@ -93,6 +93,7 @@ function content_access_node_access_records($node, $optimize = TRUE) {
     foreach (array('view', 'update', 'delete') as $op) {
       $grant['grant_'. $op] = content_access_own_op($node, content_access_per_node_setting($op, $node), content_access_per_node_setting($op .'_own', $node));
     }
+
     if (array_filter($grant)) {
       $grant['realm'] = 'content_access_author';
       $grants[] = content_access_proccess_grant($grant, $node->uid, $node);
