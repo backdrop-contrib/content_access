@@ -134,7 +134,7 @@ function content_access_admin_settings(&$form_state, $type) {
     '#type' => 'fieldset',
     '#title' => t('Content type access control settings'),
     '#collapsible' => TRUE,
-    '#description' => t('If per content settings are available, the per type settings will be overridden by them.'),
+    '#description' => t('Note that users need at leat the @access_content permission to be able to deal in any way with content.', array('@access_content' => t('access content'))),
   );
   drupal_add_css(drupal_get_path('module', 'content_access') . '/content_access.css');
   $form['type']['view'] = array('#type' => 'checkboxes',
@@ -190,7 +190,7 @@ function content_access_admin_settings(&$form_state, $type) {
     '#type' => 'fieldset',
     '#title' => t('Per content access control settings'),
     '#collapsible' => TRUE,
-    '#description' => t('Optionally you can enable per content access control settings. You have to configure permission to access the per content access settings at the !permissions page.', array('!permissions' => l(t('permissions'), 'admin/user/permissions'))),
+    '#description' => t('Optionally you can enable per content access control settings. If enabled, a new tab for the content access settings appears when viewing content. You have to configure permission to access these settings at the !permissions page.', array('!permissions' => l(t('permissions'), 'admin/user/permissions'))),
   );
   $form['node']['per_node'] = array(
     '#type' => 'checkbox',
@@ -219,29 +219,65 @@ function content_access_admin_settings(&$form_state, $type) {
 }
 
 function content_access_admin_settings_submit($form_id, &$form_state) {
-  $per_node_old = content_access_get_settings('per_node', $form_state['type']);
-  $settings = content_access_get_settings();
-
-  foreach (content_access_available_settings() as $setting) {
-    if (is_array($form_state['values'][$setting])) {
-      unset($form_state['values'][$setting][0]);
-      $form_state['values'][$setting] = array_filter($form_state['values'][$setting]);
+  // Where possible let the drupal permissions system handle access control.
+  $permissions = content_access_get_permissions_by_role();
+  foreach (array('update', 'update_own', 'delete', 'delete_own') as $op) {
+    foreach ($form_state['values'][$op] as $rid => $value) {
+      $permissions[$rid][ content_access_get_permission_by_op($op, $form_state['type']) ] = $value;
     }
-    $settings[$setting][$form_state['type']] = $form_state['values'][$setting];
+    // Don't save the setting, so its default value (get permission) is applied always.
+    unset($form_state['values'][$op]);
+  }
+  content_access_save_permissions($permissions);
+
+  // Update content access settings
+  $settings = content_access_get_settings();
+  foreach (content_access_available_settings() as $setting) {
+    unset($settings[$setting][$form_state['type']]);
+    if (isset($form_state['values'][$setting])) {
+      $settings[$setting][$form_state['type']] = is_array($form_state['values'][$setting]) ? array_filter($form_state['values'][$setting]) : $form_state['values'][$setting];
+    }
   }
   content_access_set_settings($settings);
 
-  // Mass update all nodes that use default settings.
-  if (content_access_get_settings('per_node', $form_state['type']) && $per_node_old) {
-    $sql = "SELECT n.nid FROM {node} n LEFT JOIN {content_access} na ON na.nid = n.nid
-      WHERE type = '%s' AND na.nid IS NULL";
-  }
-  else {
-    $sql = "SELECT n.nid FROM {node} n WHERE type = '%s'";
-  }
-  $result = db_query($sql, $form_state['type']);
+  // Mass update the nodes
+  content_access_mass_update($form_state['type']);
+  cache_clear_all();
+
+  drupal_set_message('Your changes have been saved.');
+}
+
+/**
+ * Mass updates node access records for nodes of the given type.
+ */
+function content_access_mass_update($type) {
+  $result = db_query("SELECT n.nid FROM {node} n WHERE type = '%s'", $type);
   while ($node = db_fetch_object($result)) {
     node_access_acquire_grants(node_load($node->nid));
   }
-  drupal_set_message('Your changes have been saved.');
+}
+
+/**
+ * Gets the permissions for the role of the given id.
+ */
+function content_access_get_permissions_by_role() {
+  $result = db_query('SELECT r.rid, p.perm FROM {role} r LEFT JOIN {permission} p ON r.rid = p.rid');
+  $permissions = array();
+  while ($role = db_fetch_object($result)) {
+    $permissions[$role->rid] = array_filter(drupal_map_assoc(explode(', ', $role->perm)));
+  }
+  return $permissions;
+}
+
+/**
+ * Saves the given permissions by role to the database.
+ */
+function content_access_save_permissions($permissions) {
+  foreach ($permissions as $rid => $perms) {
+    $perms = array_filter($perms);
+    db_query('DELETE FROM {permission} WHERE rid = %d', $rid);
+    if (count($perms)) {
+      db_query("INSERT INTO {permission} (rid, perm) VALUES (%d, '%s')", $rid, implode(', ', array_keys($perms)));
+    }
+  }
 }

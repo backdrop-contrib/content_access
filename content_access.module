@@ -203,13 +203,10 @@ function content_access_get_setting_defaults($setting, $type) {
     case 'view_own':
       return array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID);
     case 'update':
-      return content_access_get_permission_access('edit any '. $type .' content');
     case 'update_own':
-      return content_access_get_permission_access('edit own '. $type .' content');
     case 'delete':
-      return content_access_get_permission_access('delete any '. $type .' content');
     case 'delete_own':
-      return content_access_get_permission_access('delete own'. $type .' content');
+      return content_access_get_permission_access(content_access_get_permission_by_op($setting, $type));
     case 'priority':
       return 0;
   }
@@ -225,6 +222,24 @@ function content_access_get_permission_access($perm) {
     $roles[$perm] = array_keys(user_roles(0, $perm));
   }
   return $roles[$perm];
+}
+
+/**
+ * Gets the name of a permission for the given operation, if there is a suiting one.
+ */
+function content_access_get_permission_by_op($op, $type) {
+  switch ($op) {
+    default:
+      return FALSE;
+    case 'update':
+      return 'edit any '. $type .' content';
+    case 'update_own':
+      return 'edit own '. $type .' content';
+    case 'delete':
+      return 'delete any '. $type .' content';
+    case 'delete_own':
+      return 'delete own '. $type .' content';
+  }
 }
 
 /**
