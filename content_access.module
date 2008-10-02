@@ -68,11 +68,8 @@ function content_access_node_grants($account, $op) {
 
 /**
  * Implementation of hook_node_access_records()
- *
- * @param $optimize
- *   If the grants should be returned optimized.
  */
-function content_access_node_access_records($node, $optimize = TRUE) {
+function content_access_node_access_records($node) {
   if (content_access_disabling()) {
     return;
   }
@@ -81,7 +78,7 @@ function content_access_node_access_records($node, $optimize = TRUE) {
   if (content_access_get_settings('per_node', $node->type)) {
     $grants = array();
     foreach (array('view', 'update', 'delete') as $op) {
-      foreach (content_access_per_node_setting($op, $node) as $rid) {
+      foreach (content_access_per_node_op($op, $node) as $rid) {
         $grants[$rid]['grant_'. $op] = 1;
       }
     }
@@ -91,7 +88,10 @@ function content_access_node_access_records($node, $optimize = TRUE) {
     // Care for the author grant.
     $grant = array();
     foreach (array('view', 'update', 'delete') as $op) {
-      $grant['grant_'. $op] = content_access_own_op($node, content_access_per_node_setting($op, $node), content_access_per_node_setting($op .'_own', $node));
+      // Get all roles that have access to use $op on this node.
+      $any_roles = drupal_map_assoc(content_access_per_node_setting($op, $node));
+      $any_roles += ($op != 'view') ? content_access_get_settings($op, $node->type) : array();
+      $grant['grant_'. $op] = content_access_own_op($node, $any_roles, content_access_per_node_op($op .'_own', $node));
     }
 
     if (array_filter($grant)) {
@@ -106,9 +106,9 @@ function content_access_node_access_records($node, $optimize = TRUE) {
 
   if (empty($grants)) {
     // This means we grant no access.
-    $grants[] = array('grant_view' => 0, 'grant_update' => 0, 'grant_delete' => 0, 'realm' => 'content_access_rid', 'gid' => 0);
+    $grants[] = content_access_proccess_grant(array(), 0, $node);
   }
-  else if ($optimize) {
+  else {
     content_access_optimize_grants($grants, $node);
   }
   return $grants;
@@ -295,7 +295,12 @@ function content_access_proccess_grant($grant, $gid, $node) {
 }
 
 /**
- * Determines the grant for the node author and the given allowed roles of a operation
+ * Determines the grant for the node author and the given allowed roles of a operation.
+ *
+ * @param $any_roles
+ *   The roles with which anybody has access (not optimized!)
+ * @param $own_roles
+ *   The roles with which only the author has acess (optimized!)
  */
 function content_access_own_op($node, $any_roles, $own_roles) {
   static $roles = array();
@@ -314,13 +319,34 @@ function content_access_own_op($node, $any_roles, $own_roles) {
   return array_intersect($roles[$node->uid], $own_roles) ? 1 : 0;
 }
 
+/**
+ * Returns optimized role ids for the given operation and node to
+ * grant access for.
+ *
+ * If to a role access is granted by permissions, it's not necessary
+ * to write a grant for it. So it won't be returned.
+ *
+ * @param $op
+ *   One of the supported operations.
+ * @param $node
+ *   The node object.
+ */
+function content_access_per_node_op($op, $node) {
+  $rids = content_access_per_node_setting($op, $node);
+  if ($permission = content_access_get_permission_by_op($op, $node->type)) {
+    $perm_roles = content_access_get_permission_access($permission);
+    return array_diff($rids, $perm_roles);
+  }
+  return $rids;
+}
+
 
 /**
  * Returns the per node role settings. If no per node settings are available,
  * it will return the content type settings.
  *
  * @param $op
- *   One of view, update or delete.
+ *   One of the supported operations.
  * @param $node
  *   The node object.
  * @param $settings
@@ -377,43 +403,41 @@ function content_access_get_per_node_settings($node) {
  *   The grants are compared with the normal access control settings.
  */
 function content_access_optimize_grants(&$grants, $node) {
-  // Populate $view, $update and $delete with roles, that have access
-  foreach (array('view', 'update', 'delete') as $op) {
-    $$op = array();
-  }
+  $rids = array('view' => array(), 'update' => array(), 'delete' => array());
   foreach ($grants as $key => $grant) {
     foreach (array('view', 'update', 'delete') as $op) {
-      if (isset($grant['grant_'. $op]) && $grant['grant_'. $op]) {
-        ${$op}[] = $key;
+      if (is_numeric($key) && !empty($grant['grant_'. $op])) {
+        $rids[$op][] = $key;
       }
     }
   }
-  // Compare the permissions.
+  // Detect if all are allowed to view
   $all = array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID);
-  if (count(array_diff($all, $view)) == 0) {
+  if (count(array_diff($all, $rids['view'])) == 0) {
     //grant view access to all instead of single roles
-    $view = array('all');
+    $rids['view'] = array('all');
     $grants['all'] = array('realm' => 'all', 'gid' => 0, 'grant_view' => 1, 'grant_update' => 0, 'grant_delete' => 0, 'priority' => content_access_get_settings('priority', $node->type));
   }
-  $edit_perm_roles = content_access_get_permission_access('edit '. $node->type .' content');
-  $edit_own_roles = content_access_get_permission_access('edit own '. $node->type .' content');
-  if (in_array(DRUPAL_AUTHENTICATED_RID, $edit_own_roles)) {
-    $edit_perm_roles[] = 'author';
+  // If authenticated users are involved, remove unnecessary other roles.
+  foreach (array('view', 'update', 'delete') as $op) {
+    if (in_array(DRUPAL_AUTHENTICATED_RID, $rids[$op])) {
+      $rids[$op] = in_array(DRUPAL_ANONYMOUS_RID, $rids[$op]) ? array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID) : array(DRUPAL_AUTHENTICATED_RID);
+    }
   }
-  foreach (array('update', 'delete') as $op) {
-    $$op = array_diff($$op, $edit_perm_roles);
-  }
-  // $view, $update and $delete contain now only the necessary rids/author
-  // so let's remove unnecessary grants, if any.
+
+  // Now let's remove unnecessary grants, if any.
   foreach ($grants as $key => $grant) {
+    if (!is_numeric($key)) {
+      continue;
+    }
     foreach (array('view', 'update', 'delete') as $op) {
-      if (isset($grant['grant_'. $op]) && $grant['grant_'. $op] && in_array($key, $$op)) {
-        // It's still here, so we can't remove this grant
+      if ($grant['grant_'. $op] && in_array($key, $rids[$op])) {
+        //it's still here, so we can't remove this grant
         continue 2;
       }
     }
     //ok, remove it
-    $grants[$key] = FALSE;
+    unset($grants[$key]);
   }
 }
 
