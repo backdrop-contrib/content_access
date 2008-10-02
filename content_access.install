@@ -1,24 +1,26 @@
 <?php
 // $Id$
-/*
- * Implementation of hook_install
+
+/**
+ * Implementation of hook_install().
  */
 function content_access_install() {
   // Create tables.
   drupal_install_schema('content_access');
 }
 
-/*
- * Implementation of hook_uninstall
+/**
+ * Implementation of hook_uninstall().
  */
 function content_access_uninstall() {
   variable_del('content_access_settings');
   // Remove tables.
   drupal_uninstall_schema('content_access');
 }
- /*
-  * Implementation of hook_schema
-  */
+
+/**
+ * Implementation of hook_schema().
+ */
 function content_access_schema() {
   $schema['content_access'] = array(
     'fields' => array(
