@@ -65,6 +65,8 @@ function content_access_page_submit($form_id, &$form_state) {
 
   // Apply new settings.
   node_access_acquire_grants($node);
+  cache_clear_all();
+
   drupal_set_message('Your changes have been saved.');
 }
 
