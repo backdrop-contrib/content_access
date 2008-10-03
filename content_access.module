@@ -468,20 +468,21 @@ function content_access_node_type($op, $info) {
 }
 
 /**
- * Implementation of hook_node_access_explain
+ * Implementation of hook_node_access_explain().
  */
 function content_access_node_access_explain($row) {
-  static $interpretations = array();
+  static $roles;
+
+  if (!isset($roles)) {
+    $roles = user_roles();
+  }
+  if (!$row->gid && $row->realm == 'content_access_rid') {
+    return t('Content access: No access is granted.');
+  }
   switch ($row->realm) {
     case 'content_access_author':
-      $interpretations[$row->gid] = t('Content access: author of the content can access');
-      break;
+      return t('Content access: author of the content can access');
     case 'content_access_rid':
-      $roles = user_roles();
-      $interpretations[$row->gid] = t('Content access: ') . $roles[$row->gid] . t(' can access');
-      break;
-  }
-  if (isset($interpretations[$row->gid])) {
-    return $interpretations[$row->gid];
+      return t('Content access: %role can access', array('%role' => $roles[$row->gid]));
   }
 }
