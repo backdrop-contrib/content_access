@@ -33,8 +33,8 @@ function content_access_page(&$form_state, $node) {
         $acl_id = acl_create_new_acl('content_access', $op .'_'. $node->nid, content_access_get_settings('priority', $node->type));
         acl_node_add_acl($node->nid, $acl_id, $op == 'view', $op == 'update', $op == 'delete');
       }
-      $form['acl'][$op] = acl_edit_form($acl_id, 'Grant '. $op .' access');
-      $form['acl'][$op]['#collapsed'] = !isset($_POST['acl'][$op]['add_button']) && !isset($_POST['acl'][$op]['delete_button']);
+      $form['acl'][$op] = acl_edit_form($acl_id, t('Grant !op access', array('!op' => $op)));
+      $form['acl'][$op]['#collapsed'] = !isset($_POST['acl_'. $acl_id]) && !unserialize($form['acl'][$op]['user_list']['#default_value']);
     }
   }
 
@@ -48,20 +48,21 @@ function content_access_page(&$form_state, $node) {
 }
 
 
-function content_access_page_submit($form_id, &$form_state) {
+function content_access_page_submit($form, &$form_state) {
   $settings = array();
   $node = $form_state['node'];
   foreach (_content_access_get_operations() as $op) {
     // Set the settings so that further calls will return this settings.
     $settings[$op] = array_filter($form_state['values'][$op]);
+  }
+  // Save per-node settings.
+  content_access_save_per_node_settings($node, $settings);
 
-    if (module_exists('acl') && isset($form_state['values']['acl'][$op])) {
+  if (module_exists('acl')) {
+    foreach (array('view', 'update', 'delete') as $op) {
       acl_save_form($form_state['values']['acl'][$op]);
     }
   }
-
-  // Save per-node settings.
-  content_access_save_per_node_settings($node, $settings);
 
   // Apply new settings.
   node_access_acquire_grants($node);

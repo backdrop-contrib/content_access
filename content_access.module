@@ -19,7 +19,7 @@ function content_access_menu() {
     'access callback' => 'content_access_node_page_access',
     'access arguments' => array(1),
     'file' => 'content_access.admin.inc',
-    'weight' => 5,
+    'weight' => 3,
     'type' => MENU_LOCAL_TASK
   );
 
@@ -34,7 +34,7 @@ function content_access_menu() {
       'access arguments' => array(),
       'type' => MENU_LOCAL_TASK,
       'file' => 'content_access.admin.inc',
-      'weight' => 2,
+      'weight' => 1,
     );
   }
   return $items;
