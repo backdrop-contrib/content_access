@@ -49,6 +49,11 @@ function content_access_page(&$form_state, $node) {
     '#value' => t('Submit'),
     '#weight' => 10,
   );
+
+  if (!$node->status) {
+    drupal_set_message(t("Warning: Your content is not published, so this settings are not taken into account as long as the content remains unpublished."), 'error');
+  }
+
   return $form;
 }
 
@@ -237,7 +242,8 @@ function content_access_role_based_form($defaults = array()) {
     '#type' => 'fieldset',
     '#title' => t('Role based access control settings'),
     '#collapsible' => TRUE,
-    '#description' => t('Note that users need at least the %access_content permission to be able to deal in any way with content.', array('%access_content' => t('access content'))),
+    '#description' => t('Note that users need at least the %access_content permission to be able to deal in any way with content.', array('%access_content' => t('access content'))).
+      ' '. t('Furthermore note that content which is not @published is treated in a different way by drupal: It can be viewed only by its author or users with the %administer_nodes permission.', array('@published' => t('published'), '%administer_nodes' => t('administer nodes'))),
   );
   drupal_add_css(drupal_get_path('module', 'content_access') . '/content_access.css');
   $form['per_role']['view'] = array('#type' => 'checkboxes',
