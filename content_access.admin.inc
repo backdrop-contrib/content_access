@@ -6,6 +6,11 @@
  */
 
 /**
+ * Specifies the threshold until we try to mass update node grants immediately.
+ */
+define('CONTENT_ACCESS_MASS_UPDATE_THRESHOLD', 500);
+
+/**
  * Per node settings page.
  */
 function content_access_page(&$form_state, $node) {
@@ -117,7 +122,7 @@ function content_access_admin_settings(&$form_state, $type) {
   return $form;
 }
 
-function content_access_admin_settings_submit($form_id, &$form_state) {
+function content_access_admin_settings_submit($form, &$form_state) {
   // Where possible let the drupal permissions system handle access control.
   $permissions = content_access_get_permissions_by_role();
   foreach (array('update', 'update_own', 'delete', 'delete_own') as $op) {
@@ -139,21 +144,46 @@ function content_access_admin_settings_submit($form_id, &$form_state) {
   }
   content_access_set_settings($settings);
 
-  // Mass update the nodes
-  content_access_mass_update($form_state['type']);
-  cache_clear_all();
+  $type = $form_state['type'];
+  // Mass update the nodes, but only if necessary.
+  if (content_access_get_settings('per_node', $type) ||
+      content_access_get_settings('view', $type) != $form['per_role']['view']['#default_value'] || 
+      content_access_get_settings('view_own', $type) != $form['per_role']['view_own']['#default_value'] ||
+      content_access_get_settings('priority', $type) != $form['advanced']['priority']['#default_value'] ||
+      content_access_get_settings('per_node', $type) != $form['node']['per_node']['#default_value']
+     ) {
+
+    if (content_access_mass_update(array($type))) {
+      drupal_set_message(t('Permissions have been successfully rebuilt for the content type @types.', array('@types' => node_get_types('name', $type))));
+    }
+  }
 
   drupal_set_message('Your changes have been saved.');
 }
 
 /**
- * Mass updates node access records for nodes of the given type.
+ * Mass updates node access records for nodes of the given types.
+ * @param $types
+ *   An array of content type names.
+ * @return
+ *   Whether the operation has been processed successfully (TRUE) or postponed (FALSE).
  */
-function content_access_mass_update($type) {
-  $result = db_query("SELECT n.nid FROM {node} n WHERE type = '%s'", $type);
-  while ($node = db_fetch_object($result)) {
-    node_access_acquire_grants(node_load($node->nid));
+function content_access_mass_update($types) {
+  $count = db_result(db_query("SELECT COUNT(DISTINCT nid) FROM {node} WHERE type IN (". db_placeholders($types, 'text') .")", $types));
+  node_access_needs_rebuild(TRUE);
+
+  // If there not too much nodes affected, try to do it.
+  if ($count <= CONTENT_ACCESS_MASS_UPDATE_THRESHOLD) { 
+    $result = db_query("SELECT nid FROM {node} WHERE type IN (". db_placeholders($types, 'text') .")", $types);
+    while ($node = db_fetch_object($result)) {
+      node_access_acquire_grants(node_load($node->nid));
+    }
+ 
+    cache_clear_all();
+    node_access_needs_rebuild(FALSE);
+    return TRUE;
   }
+  return FALSE;
 }
 
 /**
@@ -282,4 +312,36 @@ function content_access_disable_denied_roles($element) {
     }
   }
   return $element;
+}
+
+/**
+ * Submit callback for the user permissions form.
+ * Trigger changes to node permissions to rebuild our grants.
+ */
+function content_access_user_admin_perm_submit($form, $form_state) {
+  // Check for each content type, which has per node access activated 
+  // whether permissions have been changed.
+  $types = array();
+  foreach (array_filter(content_access_get_settings('per_node')) as $type => $value) {
+    foreach (_content_access_get_node_permissions($type) as $perm) {
+      foreach (user_roles() as $rid => $role) {
+        if (in_array($perm, $form['checkboxes'][$rid]['#default_value']) != in_array($perm, $form_state['values'][$rid])) {
+          //permission changed!
+          $types[$type] = node_get_types('name', $type);
+          continue 2;
+        }
+      }
+    }
+  }
+  if ($types && content_access_mass_update(array_keys($types))) {
+    drupal_set_message(format_plural(count($types), 
+      'Permissions have been successfully rebuilt for the content type @types.',
+      'Permissions have been successfully rebuilt for the content types @types.',
+      array('@types' => implode(', ', $types))
+    ));
+  }
+}
+
+function _content_access_get_node_permissions($type) {
+  return array_filter(array_map('content_access_get_permission_by_op', _content_access_get_operations(), array_fill(0, 6, $type)));
 }
