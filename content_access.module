@@ -499,3 +499,9 @@ function content_access_form_alter(&$form, $form_state, $form_id) {
   }
 }
 
+/**
+ * Returns an array of operations used by the module.
+ */
+function _content_access_get_operations() {
+  return array('view', 'view_own', 'update', 'update_own', 'delete', 'delete_own');
+}

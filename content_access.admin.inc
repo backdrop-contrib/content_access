@@ -231,13 +231,6 @@ function content_access_save_permissions($permissions) {
 }
 
 /**
- * Returns an array of operations used by the module.
- */
-function _content_access_get_operations() {
-  return array('view', 'view_own', 'update', 'update_own', 'delete', 'delete_own');
-}
-
-/**
  * Builds the role based permission form for the given defaults.
  *
  * @param $defaults
