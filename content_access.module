@@ -124,13 +124,6 @@ function content_access_nodeapi($node, $op, $teaser, $page) {
 }
 
 /**
- * Implementation of hook_enable().
- */
-function content_access_enable() {
-  node_access_rebuild();
-}
-
-/**
  * Used by the ACL module.
  */
 function content_access_enabled() {
@@ -142,7 +135,6 @@ function content_access_enabled() {
  */
 function content_access_disable() {
   content_access_disabling(TRUE);
-  node_access_rebuild();
 }
 
 /**
