@@ -5,17 +5,23 @@ Content Access Module
 by Wolfgang Ziegler, nuppla@zites.net
 
 Yet another node access module.
-So this module allows you to manage permissions for content types by role and author. It allows
-you to specifiy custom view, edit and delete permissions for each content type. Optionally you
-can also enable per node access settings, so you can customize the access for each node.
+This module allows you to manage permissions for content types by role. It allows you to specifiy
+custom view, view own, edit, edit own, delete and delete own permissions for each content type.
+Optionally you can enable per content access settings, so you can customize the access for each
+content node.
 
 In particular
   * it comes with sensible defaults, so you need not configure anything and everything stays working
-  * it is as flexible as you want. It can work with per content type settings, per node settings
-    as well as with flexible Access Control Lists.
+  * it is as flexible as you want. It can work with per content type settings, per content node settings
+    as well as with flexible Access Control Lists (with the help of the ACL module).
   * it trys to reuse existing functionality instead of reimplementing it. So one can install the ACL
-    module and set per user access control settings per node.
-  * it optimizes the written node grants, so that only really necessary grants are written.
+    module and set per user access control settings per content node.
+  * it optimizes the written content node grants, so that only the really necessary grants are written.
+    This is important for the performance of your site.
+  * it respects and makes use of drupal's built in permissions as far as possible. Which means the
+    access control tab provided by this module takes them into account and provides you a good overview
+    about the really applied access control settings. [1]
+
 
 So the module is simple to use, but can be configured to provide really fine-grained permissions!
 
@@ -29,20 +35,28 @@ Installation
 
 ACL Module
 -----------
-You can find the ACL module at http://drupal.org/project/acl. Note that you'll need to install at
-least version 1.4 of the module. To make use of Access Control Lists you'll need to enable per node
-access control settings for a content type. At the access control tab of such a node you'll be
-able to grant single users view, edit or delete permission for this node.
+You can find the ACL module at http://drupal.org/project/acl. To make use of Access Control Lists
+you'll need to enable per content node access control settings for a content type. At the access
+control tab of such a content node you are able to grant view, edit or delete permission for specific
+users.
 
- 
 
-Enabling this module on big sites
-----------------------------------
-Drupal 5.1 uses a lot of memory, as soon as you enable this, or any other node access module on a
-site with a lot of existing nodes, which means thousands of nodes. This is problem of drupal itself,
-and is fixed in the latest development snapshot of 5.x (http://drupal.org/node/108752).
-So if you are experiencing memory issues or you are planning to enable this on such a big site update
-to the latest development snapshot of drupal 5.x before. 
-You can find it here: http://drupal.org/project/drupal
+Running multiple node access modules on a site (Advanced!)
+-----------------------------------------------------------
+A drupal node access module can only grant access to content nodes, but not deny it. So if you
+are using multiple node access modules, access will be granted to a node as soon as one of the
+module grants access to it.
+However you can influence the behaviour by changing the priority of the content access module as
+drupal applies *only* the grants with the highest priority. So if content access has the highest
+priority *alone*, only its grants will be applied. 
 
-If drupal 5.2 is already released at the time you read that, it will also contain the fix.
+By default node access modules use priority 0.
+
+
+
+Footnotes
+----------
+
+[1] Note that this overview can't take other modules into account, which might also alter node access.
+    If you have multiple modules installed that alter node access, read the paragraph about "Running 
+    multiple node access modules on a site".
