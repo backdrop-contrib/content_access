@@ -49,6 +49,13 @@ function content_access_page(&$form_state, $node) {
     '#value' => t('Submit'),
     '#weight' => 10,
   );
+  $form['reset'] = array(
+    '#type' => 'submit',
+    '#value' => t('Reset to defaults'),
+    '#weight' => 10,
+    '#submit' => array('content_access_page_reset'),
+    '#access' => count(content_access_get_per_node_settings($node)) > 0,
+  );
 
   if (!$node->status) {
     drupal_set_message(t("Warning: Your content is not published, so this settings are not taken into account as long as the content remains unpublished."), 'error');
@@ -79,6 +86,13 @@ function content_access_page_submit($form, &$form_state) {
   cache_clear_all();
 
   drupal_set_message('Your changes have been saved.');
+}
+
+function content_access_page_reset($form, &$form_state) {
+  content_access_delete_per_node_settings($form_state['node']);
+  node_access_acquire_grants($form_state['node']);
+  cache_clear_all();
+  drupal_set_message('The permissions have been reseted to the content type defaults.');
 }
 
 /**

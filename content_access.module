@@ -354,7 +354,7 @@ function content_access_per_node_setting($op, $node, $settings = NULL) {
     $grants[$node->nid] = $settings;
     return;
   }
-  if (!isset($grants[$node->nid])) {
+  if (!isset($grants[$node->nid]) || !$grants[$node->nid]) {
     $grants[$node->nid] = content_access_get_per_node_settings($node);
   }
   // Return the content type defaults if no per node settings are available
@@ -371,6 +371,16 @@ function content_access_save_per_node_settings($node, $settings) {
   }
   // Make content_access_per_node_setting() use the new settings
   content_access_per_node_setting(NULL, $node, $settings);
+}
+
+/**
+ * Delets custom per node settings, so that content type defaults are used again.
+ */
+function content_access_delete_per_node_settings($node) {
+  db_query("DELETE FROM {content_access} WHERE nid = %d", $node->nid);
+
+  // Clear the cache.
+  content_access_per_node_setting(NULL, $node, FALSE);
 }
 
 /**
