@@ -35,9 +35,9 @@ function content_access_page(&$form_state, $node) {
       $acl_id = acl_get_id_by_name('content_access', $op .'_'. $node->nid);
       if (!$acl_id) {
         // Create one:
-        $acl_id = acl_create_new_acl('content_access', $op .'_'. $node->nid, content_access_get_settings('priority', $node->type));
-        acl_node_add_acl($node->nid, $acl_id, $op == 'view', $op == 'update', $op == 'delete');
+        $acl_id = acl_create_new_acl('content_access', $op .'_'. $node->nid);
       }
+      acl_node_add_acl($node->nid, $acl_id, $op == 'view', $op == 'update', $op == 'delete', content_access_get_settings('priority', $node->type));
       $form['acl'][$op] = acl_edit_form($acl_id, t('Grant !op access', array('!op' => $op)));
       $form['acl'][$op]['#collapsed'] = !isset($_POST['acl_'. $acl_id]) && !unserialize($form['acl'][$op]['user_list']['#default_value']);
     }
