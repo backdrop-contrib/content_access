@@ -8,7 +8,7 @@
 /**
  * Specifies the threshold until we try to mass update node grants immediately.
  */
-define('CONTENT_ACCESS_MASS_UPDATE_THRESHOLD', 500);
+define('CONTENT_ACCESS_MASS_UPDATE_THRESHOLD', 300);
 
 /**
  * Per node settings page.
@@ -171,6 +171,11 @@ function content_access_admin_settings_submit($form, &$form_state) {
       content_access_get_settings('priority', $type) != $form['advanced']['priority']['#default_value'] ||
       content_access_get_settings('per_node', $type) != $form['node']['per_node']['#default_value']
      ) {
+       
+    // If per node has been disabled and we use the ACL integration, we have to remove possible ACLs now.
+    if (!content_access_get_settings('per_node', $type) && $form['node']['per_node']['#default_value'] && module_exists('acl')) {
+      _content_access_remove_acls($type);
+    }
 
     if (content_access_mass_update(array($type))) {
       drupal_set_message(t('Permissions have been successfully rebuilt for the content type @types.', array('@types' => node_get_types('name', $type))));
@@ -357,4 +362,14 @@ function content_access_user_admin_perm_submit($form, $form_state) {
 
 function _content_access_get_node_permissions($type) {
   return array_filter(array_map('content_access_get_permission_by_op', _content_access_get_operations(), array_fill(0, 6, $type)));
+}
+
+/**
+ * Detaches all our ACLs for the nodes of the given type.
+ */
+function _content_access_remove_acls($type) {
+  $result = db_query("SELECT n.nid FROM {node} n WHERE type = '%s'", $type);
+  while ($node = db_fetch_object($result)) {
+    acl_node_clear_acls($node->nid, 'content_access');
+  }
 }
