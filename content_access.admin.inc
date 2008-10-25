@@ -8,7 +8,7 @@
 /**
  * Specifies the threshold until we try to mass update node grants immediately.
  */
-define('CONTENT_ACCESS_MASS_UPDATE_THRESHOLD', 300);
+define('CONTENT_ACCESS_MASS_UPDATE_THRESHOLD', 1000);
 
 /**
  * Per node settings page.
