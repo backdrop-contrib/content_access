@@ -21,6 +21,8 @@ function content_access_page(&$form_state, $node) {
   }
 
   $form = content_access_role_based_form($defaults);
+  // Add a after_build handler that disables checkboxes, which are enforced by permissions.
+  $form['per_role']['#after_build'] = array('content_access_force_permissions');
 
   if (module_exists('acl')) {
     // This is disabled when there is no node passed.
@@ -166,12 +168,12 @@ function content_access_admin_settings_submit($form, &$form_state) {
   $type = $form_state['type'];
   // Mass update the nodes, but only if necessary.
   if (content_access_get_settings('per_node', $type) ||
-      content_access_get_settings('view', $type) != $form['per_role']['view']['#default_value'] || 
+      content_access_get_settings('view', $type) != $form['per_role']['view']['#default_value'] ||
       content_access_get_settings('view_own', $type) != $form['per_role']['view_own']['#default_value'] ||
       content_access_get_settings('priority', $type) != $form['advanced']['priority']['#default_value'] ||
       content_access_get_settings('per_node', $type) != $form['node']['per_node']['#default_value']
      ) {
-       
+
     // If per node has been disabled and we use the ACL integration, we have to remove possible ACLs now.
     if (!content_access_get_settings('per_node', $type) && $form['node']['per_node']['#default_value'] && module_exists('acl')) {
       _content_access_remove_acls($type);
@@ -197,12 +199,12 @@ function content_access_mass_update($types) {
   node_access_needs_rebuild(TRUE);
 
   // If there not too much nodes affected, try to do it.
-  if ($count <= CONTENT_ACCESS_MASS_UPDATE_THRESHOLD) { 
+  if ($count <= CONTENT_ACCESS_MASS_UPDATE_THRESHOLD) {
     $result = db_query("SELECT nid FROM {node} WHERE type IN (". db_placeholders($types, 'text') .")", $types);
     while ($node = db_fetch_object($result)) {
       node_access_acquire_grants(node_load($node->nid));
     }
- 
+
     cache_clear_all();
     node_access_needs_rebuild(FALSE);
     return TRUE;
@@ -332,12 +334,31 @@ function content_access_disable_denied_roles($element) {
   return $element;
 }
 
+
+/**
+ * Formapi #after_build callback, that disables checkboxes for roles without access to content.
+ */
+function content_access_force_permissions($element, &$form_state) {
+  foreach (array('update', 'update_own', 'delete', 'delete_own') as $op) {
+    foreach (content_access_get_settings($op, $form_state['node']->type) as $rid) {
+      $element[$op][$rid]['#disabled'] = TRUE;
+      $element[$op][$rid]['#attributes']['disabled'] = 'disabled';
+      $element[$op][$rid]['#value'] = TRUE;
+      $element[$op][$rid]['#prefix'] = '<span title="'. t("Permission is granted due to the content type's access control settings.") .'">';
+      $element[$op][$rid]['#suffix'] = "</span>";
+    }
+  }
+  return $element;
+}
+
+
+
 /**
  * Submit callback for the user permissions form.
  * Trigger changes to node permissions to rebuild our grants.
  */
 function content_access_user_admin_perm_submit($form, $form_state) {
-  // Check for each content type, which has per node access activated 
+  // Check for each content type, which has per node access activated
   // whether permissions have been changed.
   $types = array();
   foreach (array_filter(content_access_get_settings('per_node')) as $type => $value) {
@@ -352,7 +373,7 @@ function content_access_user_admin_perm_submit($form, $form_state) {
     }
   }
   if ($types && content_access_mass_update(array_keys($types))) {
-    drupal_set_message(format_plural(count($types), 
+    drupal_set_message(format_plural(count($types),
       'Permissions have been successfully rebuilt for the content type @types.',
       'Permissions have been successfully rebuilt for the content types @types.',
       array('@types' => implode(', ', $types))
