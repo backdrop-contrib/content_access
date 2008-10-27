@@ -78,7 +78,7 @@ function content_access_node_access_records($node) {
   if (content_access_get_settings('per_node', $node->type)) {
     $grants = array();
     foreach (array('view', 'update', 'delete') as $op) {
-      foreach (content_access_per_node_op($op, $node) as $rid) {
+      foreach (content_access_get_rids_per_node_op($op, $node) as $rid) {
         $grants[$rid]['grant_'. $op] = 1;
       }
     }
@@ -91,7 +91,7 @@ function content_access_node_access_records($node) {
       // Get all roles that have access to use $op on this node.
       $any_roles = drupal_map_assoc(content_access_per_node_setting($op, $node));
       $any_roles += ($op != 'view') ? content_access_get_settings($op, $node->type) : array();
-      $grant['grant_'. $op] = content_access_own_op($node, $any_roles, content_access_per_node_op($op .'_own', $node));
+      $grant['grant_'. $op] = content_access_own_op($node, $any_roles, content_access_get_rids_per_node_op($op .'_own', $node));
     }
 
     if (array_filter($grant)) {
@@ -326,11 +326,14 @@ function content_access_own_op($node, $any_roles, $own_roles) {
  * @param $node
  *   The node object.
  */
-function content_access_per_node_op($op, $node) {
+function content_access_get_rids_per_node_op($op, $node) {
   $rids = content_access_per_node_setting($op, $node);
   if ($permission = content_access_get_permission_by_op($op, $node->type)) {
     $perm_roles = content_access_get_permission_access($permission);
-    return array_diff($rids, $perm_roles);
+    $rids = array_diff($rids, $perm_roles);
+    if (in_array(DRUPAL_AUTHENTICATED_RID, $perm_roles)) {
+      return in_array(DRUPAL_ANONYMOUS_RID, $rids) ? array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID) : array(DRUPAL_AUTHENTICATED_RID);
+    }
   }
   return $rids;
 }
