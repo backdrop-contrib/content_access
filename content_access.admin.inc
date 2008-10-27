@@ -235,6 +235,8 @@ function content_access_save_permissions($permissions) {
       db_query("INSERT INTO {permission} (rid, perm) VALUES (%d, '%s')", $rid, implode(', ', array_keys($perms)));
     }
   }
+  // Make sure new permissions are applied immediately.
+  content_access_get_permission_access(FALSE, TRUE);
 }
 
 /**

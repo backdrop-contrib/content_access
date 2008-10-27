@@ -219,13 +219,16 @@ function content_access_get_setting_defaults($setting, $type) {
 /**
  * Returns an array of role ids, that contain the given permission.
  */
-function content_access_get_permission_access($perm) {
+function content_access_get_permission_access($perm, $reset = FALSE) {
   static $roles = array();
 
-  if (!isset($roles[$perm])) {
+  if ($reset) {
+    $roles = array();
+  }
+  if (!isset($roles[$perm]) && $perm) {
     $roles[$perm] = array_keys(user_roles(0, $perm));
   }
-  return $roles[$perm];
+  return isset($roles[$perm]) ? $roles[$perm] : array();
 }
 
 /**
