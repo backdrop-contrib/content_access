@@ -167,3 +167,11 @@ function content_access_condition_check_permissions_form($settings, &$form) {
 function content_access_condition_check_permissions_submit(&$settings, $form, $form_state) {
   content_access_parse_settings($settings, $form, $form_state);
 }
+
+/**
+ * Automatically upgrade the old 'content_access_action_set_node_permissions' to an
+ * 'content_access_action_grant_node_permissions' action.
+ */
+function content_access_action_set_node_permissions_upgrade(&$element) {
+  $element['#name'] = 'content_access_action_grant_node_permissions';
+}
