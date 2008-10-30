@@ -72,6 +72,7 @@ function content_access_action_grant_node_permissions($node, $settings) {
   if (_content_access_rules_check_setting($node)) {
     $ca_settings = array();
     foreach (_content_access_get_operations() as $op) {
+      $settings += array($op => array());
       $ca_settings[$op] = array_keys(array_flip(content_access_per_node_setting($op, $node)) + array_flip($settings[$op]));
     }
     content_access_save_per_node_settings($node, $ca_settings);
@@ -94,6 +95,7 @@ function content_access_action_revoke_node_permissions($node, $settings) {
   if (_content_access_rules_check_setting($node)) {
     $ca_settings = array();
     foreach (_content_access_get_operations() as $op) {
+      $settings += array($op => array());
       $ca_settings[$op] = array_diff(content_access_per_node_setting($op, $node), $settings[$op]);
     }
     content_access_save_per_node_settings($node, $ca_settings);
@@ -150,6 +152,7 @@ function content_access_condition_check_permissions($node, $settings) {
   if (_content_access_rules_check_setting($node)) {
     // Compare our settings with node's settings.
     foreach (_content_access_get_operations() as $op) {
+      $settings += array($op => array());
       $expect_roles = $settings[$op];
       $current_roles = content_access_per_node_setting($op, $node);
       if (count(array_diff($expect_roles, $current_roles)) != 0) {
