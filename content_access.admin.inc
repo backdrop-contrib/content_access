@@ -366,7 +366,7 @@ function content_access_user_admin_perm_submit($form, $form_state) {
   foreach (array_filter(content_access_get_settings('per_node')) as $type => $value) {
     foreach (_content_access_get_node_permissions($type) as $perm) {
       foreach (user_roles() as $rid => $role) {
-        if (in_array($perm, $form['checkboxes'][$rid]['#default_value']) != in_array($perm, $form_state['values'][$rid])) {
+        if (isset($form_state['values'][$rid]) && in_array($perm, $form['checkboxes'][$rid]['#default_value']) != in_array($perm, $form_state['values'][$rid])) {
           //permission changed!
           $types[$type] = node_get_types('name', $type);
           continue 2;
