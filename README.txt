@@ -16,8 +16,12 @@ In particular
     as well as with flexible Access Control Lists (with the help of the ACL module).
   * it trys to reuse existing functionality instead of reimplementing it. So one can install the ACL
     module and set per user access control settings per content node.
+    Furthermore the module provides conditions and actions for the rules module, which allows one
+    to configure even rule-based access permissions.
   * it optimizes the written content node grants, so that only the really necessary grants are written.
     This is important for the performance of your site.
+  * it takes access control as important as it is. E.g. the module has a bunch of simpletests to ensure
+    everything is working right.
   * it respects and makes use of drupal's built in permissions as far as possible. Which means the
     access control tab provided by this module takes them into account and provides you a good overview
     about the really applied access control settings. [1]
