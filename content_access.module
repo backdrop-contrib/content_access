@@ -380,13 +380,19 @@ function content_access_save_per_node_settings($node, $settings) {
 }
 
 /**
- * Deletes custom per node settings, so that content type defaults are used again.
+ * Deletes all custom per node settings, so that content type defaults are used again.
  */
 function content_access_delete_per_node_settings($node) {
   db_query("DELETE FROM {content_access} WHERE nid = %d", $node->nid);
-
   // Clear the cache.
   content_access_per_node_setting(NULL, $node, FALSE);
+  // Delete possible acl settings
+  if (module_exists('acl')) {
+    foreach (array('view', 'update', 'delete') as $op) {
+      $acl_id = content_access_get_acl_id($node, $op);
+      acl_delete_acl($acl_id);
+    }
+  }
 }
 
 /**
