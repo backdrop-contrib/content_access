@@ -380,7 +380,7 @@ function content_access_save_per_node_settings($node, $settings) {
 }
 
 /**
- * Delets custom per node settings, so that content type defaults are used again.
+ * Deletes custom per node settings, so that content type defaults are used again.
  */
 function content_access_delete_per_node_settings($node) {
   db_query("DELETE FROM {content_access} WHERE nid = %d", $node->nid);

@@ -40,7 +40,7 @@ function _content_access_rules_check_setting($node) {
  * Implementation of hook_action_info().
  */
 function content_access_rules_action_info() {
-  return array(
+  $items = array(
     'content_access_action_grant_node_permissions' => array(
       'label' => t('Grant content permissions by role'),
       'arguments' => array(
@@ -63,6 +63,27 @@ function content_access_rules_action_info() {
       'module' => 'Content access',
     ),
   );
+  if (module_exists('acl')) {
+    $items += array(
+      'content_access_action_acl_grant_access' => array(
+        'label' => t('Grant access for a user'),
+        'arguments' => array(
+          'node' => array('type' => 'node', 'label' => t('Content')),
+          'user' => array('type' => 'user', 'label' => t('User')),
+        ),
+        'module' => 'Content access',
+      ),
+      'content_access_action_acl_revoke_access' => array(
+        'label' => t('Revoke access for a user'),
+        'arguments' => array(
+          'node' => array('type' => 'node', 'label' => t('Content')),
+          'user' => array('type' => 'user', 'label' => t('User')),
+        ),
+        'module' => 'Content access',
+      ),
+    );
+  }
+  return $items;
 }
 
 /**
@@ -113,6 +134,76 @@ function content_access_action_revoke_node_permissions_submit(&$settings, $form,
 
 
 /**
+ * Action implementation: Grant access for a user.
+ */
+function content_access_action_acl_grant_access($node, $user, $settings) {
+  if (_content_access_rules_check_setting($node)) {
+    module_load_include('inc', 'content_access', 'content_access.admin');
+    foreach ($settings['ops'] as $op) {
+      $acl_id = content_access_get_acl_id($node, $op);
+      acl_add_user($acl_id, $user->uid);
+    }
+    // A following node_save() updates the grants for us.
+    return array('node' => $node);
+  }
+}
+
+function content_access_action_acl_grant_access_form($settings, &$form) {
+  $settings += array('ops' => array('view', 'update', 'delete'));
+  $form['settings']['ops'] = array(
+    '#type' => 'checkboxes',
+    '#options' => drupal_map_assoc(array('view', 'update', 'delete')),
+    '#title' => t('Operations to grant access for'),
+    '#default_value' => $settings['ops'],
+  );
+}
+function content_access_action_acl_grant_access_submit(&$settings, $form, $form_state) {
+  $settings['ops'] = array_filter($settings['ops']);
+}
+function content_access_action_acl_grant_access_help() {
+  return t("Note that this action is not going to revoke access for not chosen operations.");
+}
+function content_access_action_acl_grant_access_label($settings, $argument_labels) {
+  return t('Grant access for @user.', $argument_labels);
+}
+
+
+/**
+ * Action implementation: Revoke access for a user.
+ */
+function content_access_action_acl_revoke_access($node, $user, $settings) {
+  if (_content_access_rules_check_setting($node)) {
+    module_load_include('inc', 'content_access', 'content_access.admin');
+    foreach ($settings['ops'] as $op) {
+      $acl_id = content_access_get_acl_id($node, $op);
+      acl_remove_user($acl_id, $user->uid);
+    }
+    // A following node_save() updates the grants for us.
+    return array('node' => $node);
+  }
+}
+
+function content_access_action_acl_revoke_access_form($settings, &$form) {
+  $settings += array('ops' => array('view', 'update', 'delete'));
+  $form['settings']['ops'] = array(
+    '#type' => 'checkboxes',
+    '#options' => drupal_map_assoc(array('view', 'update', 'delete')),
+    '#title' => t('Operations to revoke access for'),
+    '#default_value' => $settings['ops'],
+  );
+}
+function content_access_action_acl_revoke_access_submit(&$settings, $form, $form_state) {
+  $settings['ops'] = array_filter($settings['ops']);
+}
+function content_access_action_acl_revoke_access_help() {
+  return t("Note that this action is only able to revoke access that has been previously granted with the help of the content access module.");
+}
+function content_access_action_acl_revoke_access_label($settings, $argument_labels) {
+  return t('Revoke access for @user.', $argument_labels);
+}
+
+
+/**
  * Action implementation: Reset permissions for a node.
  */
 function content_access_action_reset_node_permissions($node) {
@@ -141,7 +232,7 @@ function content_access_rules_condition_info() {
 
 /**
  * Condition implementation: Check if node has permissions.
- * 
+ *
  * @note
  *   This will only check for the existence of permissions, not the
  *   absence of. I.e. a rule that checks just for authenticated write

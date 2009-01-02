@@ -34,11 +34,7 @@ function content_access_page(&$form_state, $node) {
       '#tree' => TRUE,
     );
     foreach (array('view', 'update', 'delete') as $op) {
-      $acl_id = acl_get_id_by_name('content_access', $op .'_'. $node->nid);
-      if (!$acl_id) {
-        // Create one:
-        $acl_id = acl_create_new_acl('content_access', $op .'_'. $node->nid);
-      }
+      $acl_id = content_access_get_acl_id($node, $op);
       acl_node_add_acl($node->nid, $acl_id, $op == 'view', $op == 'update', $op == 'delete', content_access_get_settings('priority', $node->type));
       $form['acl'][$op] = acl_edit_form($acl_id, t('Grant !op access', array('!op' => $op)));
       $form['acl'][$op]['#collapsed'] = !isset($_POST['acl_'. $acl_id]) && !unserialize($form['acl'][$op]['user_list']['#default_value']);
@@ -393,6 +389,18 @@ function content_access_user_admin_perm_submit($form, $form_state) {
 
 function _content_access_get_node_permissions($type) {
   return array_filter(array_map('content_access_get_permission_by_op', _content_access_get_operations(), array_fill(0, 6, $type)));
+}
+
+/**
+ * Gets the content access acl id of the node.
+ */
+function content_access_get_acl_id($node, $op) {
+  $acl_id = acl_get_id_by_name('content_access', $op .'_'. $node->nid);
+  if (!$acl_id) {
+    // Create one:
+    $acl_id = acl_create_new_acl('content_access', $op .'_'. $node->nid);
+  }
+  return $acl_id;
 }
 
 /**
