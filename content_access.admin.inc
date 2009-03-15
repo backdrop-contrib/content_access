@@ -83,14 +83,14 @@ function content_access_page_submit($form, &$form_state) {
   node_access_acquire_grants($node);
   cache_clear_all();
 
-  drupal_set_message('Your changes have been saved.');
+  drupal_set_message(t('Your changes have been saved.'));
 }
 
 function content_access_page_reset($form, &$form_state) {
   content_access_delete_per_node_settings($form_state['node']);
   node_access_acquire_grants($form_state['node']);
   cache_clear_all();
-  drupal_set_message('The permissions have been reseted to the content type defaults.');
+  drupal_set_message(t('The permissions have been reseted to the content type defaults.'));
 }
 
 /**
@@ -180,7 +180,7 @@ function content_access_admin_settings_submit($form, &$form_state) {
     }
   }
 
-  drupal_set_message('Your changes have been saved.');
+  drupal_set_message(t('Your changes have been saved.'));
 }
 
 /**
