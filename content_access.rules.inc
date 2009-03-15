@@ -20,7 +20,7 @@ function content_access_rules_role_based_form($settings, &$form) {
  */
 function content_access_parse_settings(&$settings, $form, $form_state) {
   foreach (_content_access_get_operations() as $op) {
-    $settings[$op] = array_filter($form_state['values'][$op]);
+    $settings[$op] = array_keys(array_filter($form_state['values'][$op]));
   }
 }
 
