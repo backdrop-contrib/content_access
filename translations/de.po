@@ -53,11 +53,11 @@ msgid "Warning: Your content is not published, so this settings are not taken in
 msgstr "Warnung: Dieser Inhalt ist noch nicht veröffentlicht, daher werden diese Einstellungen keinen Einfluss haben, bis er veröffentlicht wird."
 
 #: content_access.admin.inc:112
-msgid "Per content access control settings"
+msgid "Per content node access control settings"
 msgstr "Einstellungen für Zugriffskontrolle pro einzelnem Inhalt (node)"
 
 #: content_access.admin.inc:114
-msgid "Optionally you can enable per content access control settings. If enabled, a new tab for the content access settings appears when viewing content. You have to configure permission to access these settings at the !permissions page."
+msgid "Optionally you can enable per content node access control settings. If enabled, a new tab for the content access settings appears when viewing content. You have to configure permission to access these settings at the !permissions page."
 msgstr "Es kann die Zugriffskontrolle für jeden einzelnen Inhalt (node) eingestellt werden. Falls dies ausgfewählt wird, erscheint ein neuer Reiter über dem Inhalt. Um darauf zu zu greifen müssen die Rechte auf der !permissions Seite gesetzt werden."
 
 #: content_access.admin.inc:114

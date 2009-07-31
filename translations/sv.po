@@ -62,11 +62,11 @@ msgid "The permissions have been reseted to the content type defaults."
 msgstr "Rättigheterna har återställts till innehållstypens förvalda."
 
 #: content_access.admin.inc:112
-msgid "Per content access control settings"
+msgid "Per content node access control settings"
 msgstr "Inställningar för behörighet per innehåll"
 
 #: content_access.admin.inc:114
-msgid "Optionally you can enable per content access control settings. If enabled, a new tab for the content access settings appears when viewing content. You have to configure permission to access these settings at the !permissions page."
+msgid "Optionally you can enable per content node access control settings. If enabled, a new tab for the content access settings appears when viewing content. You have to configure permission to access these settings at the !permissions page."
 msgstr "Du kan frivilligt aktivera inställningar för behörighet per innehåll. Om den är aktiverad kommer en ny flik finnas när innehåll visas för inställning av åtkomst åt innehåll. Du måste konfigurera rättigheten att komma åt dessa inställningar på sidan !permissions."
 
 #: content_access.admin.inc:114
