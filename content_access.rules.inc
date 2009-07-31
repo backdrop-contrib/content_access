@@ -142,6 +142,7 @@ function content_access_action_acl_grant_access($node, $user, $settings) {
     foreach ($settings['ops'] as $op) {
       $acl_id = content_access_get_acl_id($node, $op);
       acl_add_user($acl_id, $user->uid);
+      acl_node_add_acl($node->nid, $acl_id, $op == 'view', $op == 'update', $op == 'delete', content_access_get_settings('priority', $node->type));
     }
     // A following node_save() updates the grants for us.
     return array('node' => $node);
