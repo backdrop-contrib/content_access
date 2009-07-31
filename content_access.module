@@ -258,7 +258,6 @@ function content_access_get_type_grant($node) {
 
   if (!isset($defaults[$node->type])) {
     $grants = array();
-    $roles = user_roles();
 
     // Only process the 'view' op as node_access() will take care of edit and delete
     foreach (content_access_get_settings('view', $node->type) as $rid) {

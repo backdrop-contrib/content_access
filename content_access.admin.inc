@@ -248,7 +248,7 @@ function content_access_role_based_form($defaults = array()) {
     $defaults += array($op => array());
   }
 
-  $roles = user_roles();
+  $roles = array_map('filter_xss_admin', user_roles());
   // Per type:
   $form['per_role'] = array(
     '#type' => 'fieldset',
