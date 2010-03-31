@@ -12,8 +12,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Content Access 6.x\n"
 "POT-Creation-Date: 2009-05-09 21:42+0200\n"
-"PO-Revision-Date: 2009-05-09 21:57+0100\n"
-"Last-Translator: Magnus Gunnarsson <seals@passagen.se>\n"
+"PO-Revision-Date: 2010-04-01 01:36+0100\n"
+"Last-Translator: Magnus Gunnarsson <magnus.gunnarsson76@gmail.com>\n"
 "Language-Team: drupalsverige.se\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -217,7 +217,7 @@ msgstr "Upphäv åtkomst för @user."
 
 #: content_access.rules.inc:223
 msgid "Check role based settings"
-msgstr "Kontrollera rollaserade inställningar"
+msgstr "Kontrollera rollbaserade inställningar"
 
 #: content_access.rules.inc:227
 msgid "Evaluates to TRUE, if content access allows all selected operations for the given roles."
