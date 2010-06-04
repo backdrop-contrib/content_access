@@ -40,6 +40,22 @@ function content_access_menu() {
   return $items;
 }
 
+/**
+ * Implementation of hook_init().
+ *
+ * Make node access settings page use admin theme if appropriate.
+ *
+ * @see system_init()
+ */
+function content_access_init() {
+  // Use the administrative theme if the user is looking at a page at node/%/access
+  if (variable_get('node_admin_theme', '0') && arg(0) == 'node' && arg(2) == 'access') {
+    global $custom_theme;
+    $custom_theme = variable_get('admin_theme', '0');
+    drupal_add_css(drupal_get_path('module', 'system') .'/admin.css', 'module');
+  }
+}
+
 function content_access_node_page_access($node) {
   global $user;
   return content_access_get_settings('per_node', $node->type) && user_access('grant content access') || content_access_get_settings('per_node', $node->type) && (user_access('grant own content access') && ($user->uid == $node->uid));
