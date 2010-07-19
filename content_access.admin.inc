@@ -392,18 +392,6 @@ function _content_access_get_node_permissions($type) {
 }
 
 /**
- * Gets the content access acl id of the node.
- */
-function content_access_get_acl_id($node, $op) {
-  $acl_id = acl_get_id_by_name('content_access', $op .'_'. $node->nid);
-  if (!$acl_id) {
-    // Create one:
-    $acl_id = acl_create_new_acl('content_access', $op .'_'. $node->nid);
-  }
-  return $acl_id;
-}
-
-/**
  * Detaches all our ACLs for the nodes of the given type.
  */
 function _content_access_remove_acls($type) {
