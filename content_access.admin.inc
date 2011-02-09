@@ -13,17 +13,20 @@ define('CONTENT_ACCESS_MASS_UPDATE_THRESHOLD', 1000);
 /**
  * Per node settings page.
  */
-function content_access_page(&$form_state, $node) {
-  drupal_set_title(t('Access control for %title', array('%title' => $node->title)));
+function content_access_page($form, &$form_state, $node) {
+  drupal_set_title(t('Access control for @title', array('@title' => $node->title)));
 
-  foreach (_content_access_get_operations() as $op) {
+  foreach (_content_access_get_operations() as $op => $label) {
     $defaults[$op] = content_access_per_node_setting($op, $node);
   }
 
-  $form = content_access_role_based_form($defaults);
-  // Add a after_build handler that disables checkboxes, which are enforced by permissions.
+  // Get roles form
+  content_access_role_based_form($form, $defaults);
+
+  // Add an after_build handler that disables checkboxes, which are enforced by permissions.
   $form['per_role']['#after_build'] = array('content_access_force_permissions');
 
+  // ACL form
   if (module_exists('acl')) {
     // This is disabled when there is no node passed.
     $form['acl'] = array(
@@ -33,20 +36,18 @@ function content_access_page(&$form_state, $node) {
       '#collapsible' => TRUE,
       '#tree' => TRUE,
     );
+
     foreach (array('view', 'update', 'delete') as $op) {
       $acl_id = content_access_get_acl_id($node, $op);
-      acl_node_add_acl($node->nid, $acl_id, $op == 'view', $op == 'update', $op == 'delete', content_access_get_settings('priority', $node->type));
-      $form['acl'][$op] = acl_edit_form($acl_id, t('Grant !op access', array('!op' => $op)));
-      $form['acl'][$op]['#collapsed'] = !isset($_POST['acl_'. $acl_id]) && !unserialize($form['acl'][$op]['user_list']['#default_value']);
+      acl_node_add_acl($node->nid, $acl_id, (int) ($op == 'view'), (int) ($op == 'update'), (int) ($op == 'delete'), content_access_get_settings('priority', $node->type));
+
+      $form['acl'][$op] = acl_edit_form($form_state, $acl_id, t('Grant !op access', array('!op' => $op)));
+      $form['acl'][$op]['#collapsed'] = !isset($_POST['acl_' . $acl_id]) && !unserialize($form['acl'][$op]['user_list']['#default_value']);
     }
   }
 
   $form_state['node'] = $node;
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Submit'),
-    '#weight' => 10,
-  );
+
   $form['reset'] = array(
     '#type' => 'submit',
     '#value' => t('Reset to defaults'),
@@ -54,7 +55,14 @@ function content_access_page(&$form_state, $node) {
     '#submit' => array('content_access_page_reset'),
     '#access' => count(content_access_get_per_node_settings($node)) > 0,
   );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Submit'),
+    '#weight' => 10,
+  );
 
+  // @todo not true anymore?
+  // http://drupal.org/update/modules/6/7#hook_node_access_records
   if (!$node->status) {
     drupal_set_message(t("Warning: Your content is not published, so this settings are not taken into account as long as the content remains unpublished."), 'error');
   }
@@ -62,14 +70,18 @@ function content_access_page(&$form_state, $node) {
   return $form;
 }
 
-
+/**
+ * Submit callback for content_access_page().
+ */
 function content_access_page_submit($form, &$form_state) {
   $settings = array();
   $node = $form_state['node'];
-  foreach (_content_access_get_operations() as $op) {
+
+  foreach (_content_access_get_operations() as $op => $label) {
     // Set the settings so that further calls will return this settings.
     $settings[$op] = array_keys(array_filter($form_state['values'][$op]));
   }
+
   // Save per-node settings.
   content_access_save_per_node_settings($node, $settings);
 
@@ -86,32 +98,38 @@ function content_access_page_submit($form, &$form_state) {
   drupal_set_message(t('Your changes have been saved.'));
 }
 
+/**
+ * Submit callback for reset on content_access_page().
+ */
 function content_access_page_reset($form, &$form_state) {
   content_access_delete_per_node_settings($form_state['node']);
   node_access_acquire_grants($form_state['node']);
   cache_clear_all();
+
   drupal_set_message(t('The permissions have been reseted to the content type defaults.'));
 }
 
 /**
- * Per content type administration page form.
+ * Per content type settings form.
  */
-function content_access_admin_settings(&$form_state, $type) {
+function content_access_admin_settings($form, $form_state, $content_type) {
+  $type = $content_type->type;
+
   $form_state['type'] = $type;
 
   // Add role based per content type settings
   $defaults = array();
-  foreach (_content_access_get_operations() as $op) {
+  foreach (_content_access_get_operations() as $op => $label) {
     $defaults[$op] = content_access_get_settings($op, $type);
   }
-  $form = content_access_role_based_form($defaults);
+  content_access_role_based_form($form, $defaults);
 
   // Per node:
   $form['node'] = array(
     '#type' => 'fieldset',
     '#title' => t('Per content node access control settings'),
     '#collapsible' => TRUE,
-    '#description' => t('Optionally you can enable per content node access control settings. If enabled, a new tab for the content access settings appears when viewing content. You have to configure permission to access these settings at the !permissions page.', array('!permissions' => l(t('permissions'), 'admin/user/permissions'))),
+    '#description' => t('Optionally you can enable per content node access control settings. If enabled, a new tab for the content access settings appears when viewing content. You have to configure permission to access these settings at the !permissions page.', array('!permissions' => l(t('permissions'), 'admin/people/permissions'))),
   );
   $form['node']['per_node'] = array(
     '#type' => 'checkbox',
@@ -136,20 +154,41 @@ function content_access_admin_settings(&$form_state, $type) {
     '#value' => t('Submit'),
     '#weight' => 10,
   );
+
   return $form;
 }
 
+/**
+ * Submit handler for per content type settings form.
+ */
 function content_access_admin_settings_submit($form, &$form_state) {
-  // Where possible let the drupal permissions system handle access control.
-  $permissions = content_access_get_permissions_by_role();
+  $roles_permissions = user_role_permissions(user_roles());
+  $permissions = user_permission_get_modules();
+
+  // Remove disabled modules permissions, so they can't raise exception
+  // in content_access_save_permissions()
+  foreach ($roles_permissions as $rid => $role_permissions) {
+    foreach ($role_permissions as $permission => $value) {
+      if (!array_key_exists($permission, $permissions)) {
+        unset($roles_permissions[$rid][$permission]);
+      }
+    }
+  }
+
   foreach (array('update', 'update_own', 'delete', 'delete_own') as $op) {
     foreach ($form_state['values'][$op] as $rid => $value) {
-      $permissions[$rid][ content_access_get_permission_by_op($op, $form_state['type']) ] = $value;
+      $permission = content_access_get_permission_by_op($op, $form_state['type']);
+      if ($value) {
+        $roles_permissions[$rid][$permission] = TRUE;
+      }
+      else {
+        $roles_permissions[$rid][$permission] = FALSE;
+      }
     }
     // Don't save the setting, so its default value (get permission) is applied always.
     unset($form_state['values'][$op]);
   }
-  content_access_save_permissions($permissions);
+  content_access_save_permissions($roles_permissions);
 
   // Update content access settings
   $settings = content_access_get_settings();
@@ -176,7 +215,7 @@ function content_access_admin_settings_submit($form, &$form_state) {
     }
 
     if (content_access_mass_update(array($type))) {
-      drupal_set_message(t('Permissions have been successfully rebuilt for the content type @types.', array('@types' => node_get_types('name', $type))));
+      drupal_set_message(t('Permissions have been successfully rebuilt for the content type @types.', array('@types' => node_type_get_name($type))));
     }
   }
 
@@ -191,13 +230,18 @@ function content_access_admin_settings_submit($form, &$form_state) {
  *   Whether the operation has been processed successfully (TRUE) or postponed (FALSE).
  */
 function content_access_mass_update($types) {
-  $count = db_result(db_query("SELECT COUNT(DISTINCT nid) FROM {node} WHERE type IN (". db_placeholders($types, 'text') .")", $types));
+  $q = db_select('node', 'n')
+    ->fields('n', array('nid'))
+    ->condition('n.type', $types, 'IN');
+
+  $count = $q->countQuery()->execute()->fetchField();
+
   node_access_needs_rebuild(TRUE);
 
   // If there not too much nodes affected, try to do it.
   if ($count <= CONTENT_ACCESS_MASS_UPDATE_THRESHOLD) {
-    $result = db_query("SELECT nid FROM {node} WHERE type IN (". db_placeholders($types, 'text') .")", $types);
-    while ($node = db_fetch_object($result)) {
+    $records = $q->execute();
+    foreach ($records as $node) {
       node_access_acquire_grants(node_load($node->nid));
     }
 
@@ -209,30 +253,12 @@ function content_access_mass_update($types) {
 }
 
 /**
- * Gets the permissions for the role of the given id.
- */
-function content_access_get_permissions_by_role() {
-  $result = db_query('SELECT r.rid, p.perm FROM {role} r LEFT JOIN {permission} p ON r.rid = p.rid');
-  $permissions = array();
-  while ($role = db_fetch_object($result)) {
-    $permissions[$role->rid] = array_filter(drupal_map_assoc(explode(', ', $role->perm)));
-  }
-  return $permissions;
-}
-
-/**
  * Saves the given permissions by role to the database.
  */
-function content_access_save_permissions($permissions) {
-  foreach ($permissions as $rid => $perms) {
-    $perms = array_filter($perms);
-    db_query('DELETE FROM {permission} WHERE rid = %d', $rid);
-    if (count($perms)) {
-      db_query("INSERT INTO {permission} (rid, perm) VALUES (%d, '%s')", $rid, implode(', ', array_keys($perms)));
-    }
+function content_access_save_permissions($roles_permissions) {
+  foreach ($roles_permissions as $rid => $permissions) {
+    user_role_change_permissions($rid, $permissions);
   }
-  // Make sure new permissions are applied immediately.
-  content_access_get_permission_access(FALSE, TRUE);
 }
 
 /**
@@ -241,77 +267,36 @@ function content_access_save_permissions($permissions) {
  * @param $defaults
  *   Array of defaults for all operations.
  */
-function content_access_role_based_form($defaults = array()) {
-
-  // Make sure defaults are set properly
-  foreach (_content_access_get_operations() as $op) {
-    $defaults += array($op => array());
-  }
-
-  $roles = array_map('filter_xss_admin', user_roles());
-  // Per type:
+function content_access_role_based_form(&$form, $defaults = array()) {
   $form['per_role'] = array(
     '#type' => 'fieldset',
     '#title' => t('Role based access control settings'),
     '#collapsible' => TRUE,
-    '#description' => t('Note that users need at least the %access_content permission to be able to deal in any way with content.', array('%access_content' => t('access content'))).
-      ' '. t('Furthermore note that content which is not @published is treated in a different way by drupal: It can be viewed only by its author or users with the %administer_nodes permission.', array('@published' => t('published'), '%administer_nodes' => t('administer nodes'))),
+    '#description' => t('Note that users need at least the %access_content permission to be able to deal in any way with content.', array('%access_content' => t('access content'))) .
+      ' ' . t('Furthermore note that content which is not @published is treated in a different way by drupal: It can be viewed only by its author or users with the %administer_nodes permission.', array('@published' => t('published'), '%administer_nodes' => t('administer nodes'))),
   );
+
+  $operations = _content_access_get_operations();
+  $roles = array_map('filter_xss_admin', user_roles());
+  foreach ($operations as $op => $label) {
+    // Make sure defaults are set properly
+    $defaults += array($op => array());
+
+    $form['per_role'][$op] = array('#type' => 'checkboxes',
+      '#prefix' => '<div class="content_access-div">',
+      '#suffix' => '</div>',
+      '#options' => $roles,
+      '#title' => $label,
+      '#default_value' => $defaults[$op],
+      '#process' => array('form_process_checkboxes', 'content_access_disable_checkboxes'),
+    );
+  }
+
+  $form['per_role']['clearer'] = array(
+    '#value' => '<br clear="all" />',
+  );
+
   drupal_add_css(drupal_get_path('module', 'content_access') . '/content_access.css');
-  $form['per_role']['view'] = array('#type' => 'checkboxes',
-    '#prefix' => '<div class="content_access-div">',
-    '#suffix' => '</div>',
-    '#options' => $roles,
-    '#title' => t('View any content'),
-    '#default_value' => $defaults['view'],
-    '#process' => array('expand_checkboxes', 'content_access_disable_checkboxes'),
-  );
-  $form['per_role']['update'] = array('#type' => 'checkboxes',
-    '#prefix' => '<div class="content_access-div">',
-    '#suffix' => '</div>',
-    '#options' => $roles,
-    '#title' => t('Edit any content'),
-    '#default_value' => $defaults['update'],
-    '#process' => array('expand_checkboxes', 'content_access_disable_checkboxes'),
-  );
-  $form['per_role']['delete'] = array('#type' => 'checkboxes',
-    '#prefix' => '<div class="content_access-div">',
-    '#suffix' => '</div>',
-    '#options' => $roles,
-    '#title' => t('Delete any content'),
-    '#default_value' => $defaults['delete'],
-    '#process' => array('expand_checkboxes', 'content_access_disable_checkboxes'),
-  );
-  $form['per_role']['clearer'] = array(
-    '#value' => '<br clear="all" />',
-  );
-  $form['per_role']['view_own'] = array('#type' => 'checkboxes',
-    '#prefix' => '<div class="content_access-div">',
-    '#suffix' => '</div>',
-    '#options' => $roles,
-    '#title' => t('View own content'),
-    '#default_value' => $defaults['view_own'],
-    '#process' => array('expand_checkboxes', 'content_access_disable_checkboxes'),
-  );
-  $form['per_role']['update_own'] = array('#type' => 'checkboxes',
-    '#prefix' => '<div class="content_access-div">',
-    '#suffix' => '</div>',
-    '#options' => $roles,
-    '#title' => t('Edit own content'),
-    '#default_value' => $defaults['update_own'],
-    '#process' => array('expand_checkboxes', 'content_access_disable_checkboxes'),
-  );
-  $form['per_role']['delete_own'] = array('#type' => 'checkboxes',
-    '#prefix' => '<div class="content_access-div">',
-    '#suffix' => '</div>',
-    '#options' => $roles,
-    '#title' => t('Delete own content'),
-    '#default_value' => $defaults['delete_own'],
-    '#process' => array('expand_checkboxes', 'content_access_disable_checkboxes'),
-  );
-  $form['per_role']['clearer'] = array(
-    '#value' => '<br clear="all" />',
-  );
 
   return $form;
 }
@@ -322,24 +307,28 @@ function content_access_role_based_form($defaults = array()) {
 function content_access_disable_checkboxes($element) {
   $access_roles = content_access_get_permission_access('access content');
   $admin_roles = content_access_get_permission_access('administer nodes');
+
   foreach (element_children($element) as $key) {
-    if (!in_array($key, $access_roles) && !($key != DRUPAL_ANONYMOUS_RID && in_array(DRUPAL_AUTHENTICATED_RID, $access_roles))) {
+    if (!in_array($key, $access_roles) &&
+        !($key != DRUPAL_ANONYMOUS_RID &&
+        in_array(DRUPAL_AUTHENTICATED_RID, $access_roles))) {
       $element[$key]['#disabled'] = TRUE;
       $element[$key]['#default_value'] = FALSE;
-      $element[$key]['#prefix'] = '<span title="'. t("This role is lacking the permission '@perm', so it has no access.", array('@perm' => t('access content'))) .'">';
+      $element[$key]['#prefix'] = '<span title="' . t("This role is lacking the permission '@perm', so it has no access.", array('@perm' => t('access content'))) . '">';
       $element[$key]['#suffix'] = "</span>";
     }
-    else if (in_array($key, $admin_roles) || ($key != DRUPAL_ANONYMOUS_RID && in_array(DRUPAL_AUTHENTICATED_RID, $admin_roles))) {
+    elseif (in_array($key, $admin_roles) ||
+            ($key != DRUPAL_ANONYMOUS_RID && in_array(DRUPAL_AUTHENTICATED_RID, $admin_roles))) {
       // Fix the checkbox to be enabled for users with administer node privileges
       $element[$key]['#disabled'] = TRUE;
       $element[$key]['#default_value'] = TRUE;
-      $element[$key]['#prefix'] = '<span title="'. t("This role has '@perm' permission, so access is granted.", array('@perm' => t('administer nodes'))) .'">';
+      $element[$key]['#prefix'] = '<span title="' . t("This role has '@perm' permission, so access is granted.", array('@perm' => t('administer nodes'))) . '">';
       $element[$key]['#suffix'] = "</span>";
     }
   }
+
   return $element;
 }
-
 
 /**
  * Formapi #after_build callback, that disables checkboxes for roles without access to content.
@@ -350,14 +339,13 @@ function content_access_force_permissions($element, &$form_state) {
       $element[$op][$rid]['#disabled'] = TRUE;
       $element[$op][$rid]['#attributes']['disabled'] = 'disabled';
       $element[$op][$rid]['#value'] = TRUE;
-      $element[$op][$rid]['#prefix'] = '<span title="'. t("Permission is granted due to the content type's access control settings.") .'">';
+      $element[$op][$rid]['#checked'] = TRUE;
+      $element[$op][$rid]['#prefix'] = '<span title="' . t("Permission is granted due to the content type's access control settings.") . '">';
       $element[$op][$rid]['#suffix'] = "</span>";
     }
   }
   return $element;
 }
-
-
 
 /**
  * Submit callback for the user permissions form.
@@ -388,15 +376,26 @@ function content_access_user_admin_perm_submit($form, $form_state) {
 }
 
 function _content_access_get_node_permissions($type) {
-  return array_filter(array_map('content_access_get_permission_by_op', _content_access_get_operations(), array_fill(0, 6, $type)));
+  return array_filter(array_map('content_access_get_permission_by_op', array_flip(_content_access_get_operations()), array_fill(0, 6, $type)));
+}
+
+/**
+ * Gets the content access acl id of the node.
+ */
+function content_access_get_acl_id($node, $op) {
+  $acl_id = acl_get_id_by_name('content_access', $op . '_' . $node->nid);
+  if (!$acl_id) {
+    $acl_id = acl_create_new_acl('content_access', $op . '_' . $node->nid);
+  }
+  return $acl_id;
 }
 
 /**
  * Detaches all our ACLs for the nodes of the given type.
  */
 function _content_access_remove_acls($type) {
-  $result = db_query("SELECT n.nid FROM {node} n WHERE type = '%s'", $type);
-  while ($node = db_fetch_object($result)) {
+  $result = db_query("SELECT n.nid FROM {node} n WHERE type = :type", array('type' => $type));
+  foreach ($result as $node) {
     acl_node_clear_acls($node->nid, 'content_access');
   }
 }
