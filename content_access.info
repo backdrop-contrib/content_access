@@ -1,4 +1,3 @@
-; $Id$
 name = Content Access
 description = Provides flexible content access control.
 core = 7.x
