@@ -529,8 +529,10 @@ function content_access_node_type_update($info) {
   if (!empty($info->old_type) && $info->old_type != $info->type) {
     $settings = content_access_get_settings();
     foreach (content_access_available_settings() as $setting) {
-      $settings[$setting][$info->type] = $settings[$setting][$info->old_type];
-      unset($settings[$setting][$info->old_type]);
+      if (isset($settings[$setting][$info->old_type])) {
+        $settings[$setting][$info->type] = $settings[$setting][$info->old_type];
+        unset($settings[$setting][$info->old_type]);
+      }
     }
     content_access_set_settings($settings);
   }
