@@ -81,11 +81,10 @@ function _content_access_roles_list() {
 function content_access_list_to_checkboxes($element) {
   $checkboxes = array();
   $operations = _content_access_get_operations();
-  $labels = _content_access_get_operations_lables($operations);
 
   foreach ($operations as $op) {
     $checkboxes[$op] = $element;
-    $checkboxes[$op]['#title'] = t($labels[$op]);
+    $checkboxes[$op]['#title'] = t($op);
     $checkboxes[$op]['#type'] = 'checkboxes';
     $checkboxes[$op]['#options'] = $element['#options'][$op];
     unset($checkboxes[$op]['#default_value']);
