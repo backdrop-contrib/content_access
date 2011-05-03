@@ -25,8 +25,13 @@ class ContentAccessACLTestCase extends ContentAccessTestCase {
   /**
    * Setup configuration before each test
    */
-  function setUp() {
+  function setUp($module = '') {
     parent::setUp('acl');
+
+    if (!module_exists('acl')) {
+      $this->pass('No ACL module present, skipping test');
+      return;
+    }
 
     // Create test nodes
     $this->node = $this->drupalCreateNode(array('type' => $this->content_type->type));

@@ -20,7 +20,7 @@ class ContentAccessModuleTestCase extends ContentAccessTestCase {
     );
   }
 
-  function setUp() {
+  function setUp($module = '') {
     parent::setUp();
 
     // Create test nodes

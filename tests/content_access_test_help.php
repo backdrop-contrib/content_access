@@ -8,6 +8,7 @@
 class ContentAccessTestCase extends DrupalWebTestCase {
 
   var $test_user;
+  var $rid;
   var $admin_user;
   var $content_type;
   var $url_content_type_name;
@@ -28,12 +29,24 @@ class ContentAccessTestCase extends DrupalWebTestCase {
       parent::setUp('content_access', $module);
       // Stop setup when module could not be enabled
       if (!module_exists($module)) {
+        $this->pass('No ' . $module . ' module present, skipping test');
         return;
       }
     }
 
     // Create test user with seperate role
     $this->test_user = $this->drupalCreateUser();
+
+    // Get the value of the new role
+    // Needed in D7 because it's by default create two roles for new users
+    // one role is Authenticated and the second is new default one
+    // @see drupalCreateUser()
+    foreach ($this->test_user->roles as $rid => $role) {
+      if (!in_array($rid, array(DRUPAL_AUTHENTICATED_RID))) {
+        $this->rid = $rid;
+        break;
+      }
+    }
 
     // Create admin user
     $this->admin_user = $this->drupalCreateUser(array('access content', 'administer content types', 'grant content access', 'grant own content access', 'administer nodes', 'access administration pages'));
@@ -61,13 +74,20 @@ class ContentAccessTestCase extends DrupalWebTestCase {
   function changeAccessContentTypeKeyword($keyword, $access = TRUE, $user = NULL) {
     if ($user === NULL) {
       $user = $this->test_user;
+      $roles[$this->rid] = $user->roles[$this->rid];
+    } else {
+      foreach ($user->roles as $rid => $role) {
+        if (!in_array($rid, array(DRUPAL_AUTHENTICATED_RID))) {
+          $roles[$rid] = $user->roles[$rid];
+          break;
+        }
+      }
     }
-    $roles = $user->roles;
-    // Make sure to get a role from the end, thus not the authenticated users.
-    end($roles);
+
     $access_settings = array(
       $keyword .'['. key($roles) .']' => $access,
     );
+
     $this->changeAccessContentType($access_settings);
   }
 
@@ -86,12 +106,12 @@ class ContentAccessTestCase extends DrupalWebTestCase {
    */
   function changeAccessNodeKeyword($node, $keyword, $access = TRUE) {
     $user = $this->test_user;
-    $roles = $user->roles;
-    // Make sure to get a role from the end, thus not the authenticated users.
-    end($roles);
+    $roles[$this->rid] = $user->roles[$this->rid];
+
     $access_settings = array(
       $keyword .'['. key($roles) .']' => $access,
     );
+
     $this->changeAccessNode($node, $access_settings);
   }
 
