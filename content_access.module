@@ -233,7 +233,7 @@ function content_access_set_settings($settings) {
   variable_set('content_access_settings', $settings);
 }
 
-/*
+/**
  * Return an array containing all available content_access settings.
  */
 function content_access_available_settings() {
@@ -402,37 +402,58 @@ function content_access_get_rids_per_node_op($op, $node) {
  */
 function content_access_per_node_setting($op, $node, $settings = NULL) {
   static $grants = array();
-
+ddebug_backtrace();
   if (isset($settings)) {
     // Update settings cache
     $grants[$node->nid] = $settings;
     return;
   }
+
   if (!isset($grants[$node->nid]) || $grants[$node->nid] === FALSE) {
     $grants[$node->nid] = content_access_get_per_node_settings($node);
   }
+
   // Return the content type defaults if no per node settings are available
   return isset($grants[$node->nid][$op]) ? $grants[$node->nid][$op] : content_access_get_settings($op, $node->type);
+}
+
+/**
+ * Gets the per node settings of a node.
+ *
+ * @note
+ *   This function won't apply defaults, so if there are no other settings
+ *   it will return an empty array.
+ */
+function content_access_get_per_node_settings($node) {
+  foreach (db_query("SELECT settings FROM {content_access} WHERE nid = :nid", array(':nid' => $node->nid)) as $record) {
+    $settings = $record->settings;
+    if (!$settings) {
+      return array();
+    }
+    return unserialize($settings);
+  }
 }
 
 /**
  * Saves custom per node settings in the own content_access table.
  */
 function content_access_save_per_node_settings($node, $settings) {
-  db_update('content_access')
-    ->condition('nid', $node->nid)
-    ->fields(array('settings' => serialize($settings)))
-    ->execute();
-
   $count = db_query('SELECT COUNT(nid) FROM {content_access} WHERE nid = :nid', array(
     ':nid' => $node->nid,
   ))->fetchField();
 
-  if (!$count) {
+  if ($count > 0) {
+    db_update('content_access')
+      ->condition('nid', $node->nid)
+      ->fields(array('settings' => serialize($settings)))
+      ->execute();
+  }
+  else {
     db_insert('content_access')
       ->fields(array('nid' => $node->nid, 'settings' => serialize($settings)))
       ->execute();
   }
+
   // Make content_access_per_node_setting() use the new settings
   content_access_per_node_setting(NULL, $node, $settings);
 }
@@ -456,23 +477,6 @@ function content_access_delete_per_node_settings($node) {
       $acl_id = content_access_get_acl_id($node, $op);
       acl_delete_acl($acl_id);
     }
-  }
-}
-
-/**
- * Gets the per node settings of a node.
- *
- * @note
- *   This function won't apply defaults, so if there are no other settings
- *   it will return an empty array.
- */
-function content_access_get_per_node_settings($node) {
-  foreach (db_query("SELECT settings FROM {content_access} WHERE nid = :nid", array(':nid' => $node->nid)) as $record) {
-    $settings = $record->settings;
-    if (!$settings) {
-      return array();
-    }
-    return unserialize($settings);
   }
 }
 
