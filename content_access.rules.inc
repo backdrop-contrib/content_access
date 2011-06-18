@@ -181,6 +181,7 @@ function content_access_action_grant_node_permissions($params) {
   if (_content_access_rules_check_setting($params['node'])) {
     $settings = content_access_action_settings($params['content_access']);
     content_access_save_per_node_settings($params['node'], $settings);
+    node_access_acquire_grants($params['node']);
 
     // A following node_save() updates the grants for us.
     return array('node' => $params['node']);
@@ -194,6 +195,7 @@ function content_access_action_revoke_node_permissions($params) {
   if (_content_access_rules_check_setting($params['node'])) {
     $settings = content_access_action_settings($params['content_access']);
     content_access_save_per_node_settings($params['node'], $settings);
+    node_access_acquire_grants($params['node']);
 
     // A following node_save() updates the grants for us.
     return array('node' => $params['node']);
@@ -241,16 +243,10 @@ function content_access_action_settings($param) {
     $settings[$op] = array();
   }
 
-  foreach ($settings as $op => $setting) {
-    foreach ($roles_ids as $rid) {
-      $settings[$op][$rid] = 0;
-    }
-  }
-
   foreach ($param as $op_role => $role) {
     $op = substr($op_role, 0, strpos($op_role, ':'));
     $rid = $roles_ids[$role];
-    $settings[$op][$rid] = TRUE;
+    $settings[$op][] = $rid;
   }
 
   return $settings;

@@ -402,7 +402,7 @@ function content_access_get_rids_per_node_op($op, $node) {
  */
 function content_access_per_node_setting($op, $node, $settings = NULL) {
   static $grants = array();
-ddebug_backtrace();
+
   if (isset($settings)) {
     // Update settings cache
     $grants[$node->nid] = $settings;
