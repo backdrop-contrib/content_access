@@ -3,6 +3,10 @@
 /**
  * @file
  * Rules specific functions that expose content_access' API.
+ *
+ * @todo
+ *   A way to enable per-node settings when a rule created, otherwise no effects
+ *   will be noticed.
  */
 
 /**
@@ -181,7 +185,10 @@ function content_access_action_grant_node_permissions($params) {
   if (_content_access_rules_check_setting($params['node'])) {
     $settings = content_access_action_settings($params['content_access']);
     content_access_save_per_node_settings($params['node'], $settings);
-    node_access_acquire_grants($params['node']);
+    // @todo find a better way to check for node save?
+    if (!content_access_rules_check_grants($params['node']->nid) && $params['node']->op != 'Save') {
+      node_access_acquire_grants($params['node']);
+    }
 
     // A following node_save() updates the grants for us.
     return array('node' => $params['node']);
@@ -195,7 +202,9 @@ function content_access_action_revoke_node_permissions($params) {
   if (_content_access_rules_check_setting($params['node'])) {
     $settings = content_access_action_settings($params['content_access']);
     content_access_save_per_node_settings($params['node'], $settings);
-    node_access_acquire_grants($params['node']);
+    if (!content_access_rules_check_grants($params['node']->nid) && $params['node']->op != 'Save') {
+      node_access_acquire_grants($params['node']);
+    }
 
     // A following node_save() updates the grants for us.
     return array('node' => $params['node']);
@@ -250,4 +259,13 @@ function content_access_action_settings($param) {
   }
 
   return $settings;
+}
+
+/**
+ * Check if a given nid has grants in {node_access} or not.
+ */
+function content_access_rules_check_grants($nid) {
+  return db_select('node_access')
+          ->condition('nid', $nid)
+          ->countQuery()->execute()->fetchField();
 }
