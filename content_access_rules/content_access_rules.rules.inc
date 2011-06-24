@@ -16,14 +16,11 @@
  * @ingroup rules
  */
 function content_access_rules_rules_event_info() {
-  $events = array(
-    'content_access_content_type' => array(
-      'label' => t('Content type access changed'),
-    ),
-    'content_access_content_user' => array(
-      'label' => t('Grant user on content'),
-    ),
-  );
+  $events['content_access_content_type'] = array('label' => t('Content type access changed'));
+
+  if (module_exists('acl')) {
+    $events['content_access_content_user'] = array('label' => t('Grant user on content'));
+  }
 
   $items = array();
   foreach ($events as $name => $event) {
