@@ -13,23 +13,38 @@
  * Implementation of hook_action_info().
  */
 function content_access_rules_action_info() {
-  $actions = array(
+  $role_actions = array(
     'content_access_action_grant_node_permissions' => array(
       'label' => t('Grant content permissions by role'),
-      'description' => t('Add Desc.'),
+      'description' => t('Grant node permissions to specific role(s).'),
     ),
     'content_access_action_revoke_node_permissions' => array(
       'label' => t('Revoke content permissions by role'),
-      'description' => t('Add Desc.'),
+      'description' => t('Revoke node permissions from specific role(s).'),
     ),
     'content_access_action_reset_node_permissions' => array(
       'label' => t('Reset content permissions'),
-      'description' => t('Add Desc.'),
+      'description' => t('Reset node permissions to default permissions.'),
+    ),
+  );
+
+  $user_actions = array(
+    'content_access_action_user_grant_view' => array(
+      'label' => t('Grant user view access'),
+      'description' => t('Grant node view to specific user(s).'),
+    ),
+    'content_access_action_user_grant_update' => array(
+      'label' => t('Grant user update access'),
+      'description' => t('Grant node update to specific user(s).'),
+    ),
+    'content_access_action_user_grant_delete' => array(
+      'label' => t('Grant user delete access'),
+      'description' => t('Grant node delete to specific user(s).'),
     ),
   );
 
   $items = array();
-  foreach ($actions as $name => $action) {
+  foreach ($role_actions as $name => $action) {
     $items[$name] = array(
       'label' => $action['label'],
       'named parameter' => TRUE,
@@ -47,11 +62,33 @@ function content_access_rules_action_info() {
           'restriction' => 'input',
         ),
       ),
-      'group' => t('Content Access'),
+      'group' => t('Content Access Role'),
       'callbacks' => array(
         'form_alter' => 'content_access_action_form_alter',
       ),
     );
+  }
+
+  if (module_exists('acl')) {
+    foreach ($user_actions as $name => $action) {
+      $items[$name] = array(
+        'label' => $action['label'],
+        'named parameter' => TRUE,
+        'parameter' => array(
+          'node' => array(
+            'type' => 'node',
+            'label' => t('Content'),
+            'description' => $action['description'],
+          ),
+          'content_access' => array(
+            'type' => 'user',
+            'label' => t('User Based Access Control Settings'),
+            'description' => t('User to grant permissions.'),
+          ),
+        ),
+        'group' => t('Content Access User'),
+      );
+    }
   }
 
   return $items;
@@ -261,4 +298,38 @@ function content_access_rules_check_grants($nid) {
   return db_select('node_access')
           ->condition('nid', $nid)
           ->countQuery()->execute()->fetchField();
+}
+
+/**
+ * Action implementation: Grant user view access.
+ */
+function content_access_action_user_grant_view($params) {
+  content_access_action_user_grant($params['node'], $params['content_access']->uid, 'view');
+}
+
+/**
+ * Action implementation: Grant user update access.
+ */
+function content_access_action_user_grant_update($params) {
+  content_access_action_user_grant($params['node'], $params['content_access']->uid, 'update');
+}
+
+/**
+ * Action implementation: Grant user delete access.
+ */
+function content_access_action_user_grant_delete($params) {
+  content_access_action_user_grant($params['node'], $params['content_access']->uid, 'delete');
+}
+
+/**
+ * Process Rule's param, and grant by the passed operation.
+ */
+function content_access_action_user_grant($node, $uid, $op) {
+  module_load_include('inc', 'content_access', 'content_access.admin');
+
+  $acl_id = content_access_get_acl_id($node, $op);
+  acl_node_add_acl($node->nid, $acl_id, (int) ($op == 'view'), (int) ($op == 'update'), (int) ($op == 'delete'), content_access_get_settings('priority', $node->type));
+  acl_add_user($acl_id, $uid);
+
+  node_access_acquire_grants($node);
 }
