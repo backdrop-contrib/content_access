@@ -87,6 +87,7 @@ function content_access_page_submit($form, &$form_state) {
   if (module_exists('acl')) {
     foreach (array('view', 'update', 'delete') as $op) {
       acl_save_form($form_state['values']['acl'][$op]);
+      module_invoke_all('content_user', $settings);
     }
   }
 

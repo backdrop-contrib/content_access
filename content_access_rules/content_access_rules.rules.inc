@@ -5,14 +5,43 @@
  * Rules specific functions that expose content_access' API.
  *
  * @todo
- *   A way to enable per-node settings when a rule created, otherwise no effects
+ * A way to enable per-node settings when a rule created, otherwise no effects
  *   will be noticed.
+ * Clean-up function names.
  */
 
 /**
- * Implementation of hook_action_info().
+ * Implements hook_rules_event_info().
+ *
+ * @ingroup rules
  */
-function content_access_rules_action_info() {
+function content_access_rules_rules_event_info() {
+  $events = array(
+    'content_access_content_type' => array(
+      'label' => t('Content type access changed'),
+    ),
+    'content_access_content_user' => array(
+      'label' => t('Grant user on content'),
+    ),
+  );
+
+  $items = array();
+  foreach ($events as $name => $event) {
+    $items[$name] = array(
+      'label' => $event['label'],
+      'group' => t('Content Access'),
+    );
+  }
+
+  return $items;
+}
+
+/**
+ * Implementation of hook_rules_action_info().
+ *
+ * @ingroup rules
+ */
+function content_access_rules_rules_action_info() {
   $role_actions = array(
     'content_access_action_grant_node_permissions' => array(
       'label' => t('Grant content permissions by role'),

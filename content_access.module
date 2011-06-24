@@ -194,7 +194,7 @@ function content_access_disabling($set = NULL) {
 }
 
 /**
- * Returns the content_access' settings.
+ * Returncontent_access' settings.
  *
  * @param $return
  *   One of the content_access_available_settings(), e.g. 'view' or 'per_node'.
@@ -217,7 +217,9 @@ function content_access_get_settings($return = 'all', $type = NULL) {
 }
 
 /**
- * Saves the content_access settings - needs the complete settings array.
+ * Save content_access settings.
+ *
+ * Needs the complete settings array.
  */
 function content_access_set_settings($settings) {
   // Cleanup the settings before saving.
@@ -230,7 +232,10 @@ function content_access_set_settings($settings) {
       }
     }
   }
+
   variable_set('content_access_settings', $settings);
+
+  module_invoke_all('content_type_access', $settings);
 }
 
 /**
@@ -627,30 +632,6 @@ function content_access_disable_checkboxes($element) {
       $element[$key]['#default_value'] = TRUE;
       $element[$key]['#prefix'] = '<span title="' . t("This role has '@perm' permission, so access is granted.", array('@perm' => t('administer nodes'))) . '">';
       $element[$key]['#suffix'] = "</span>";
-    }
-  }
-
-  return $element;
-}
-
-/**
- * Manipulate and pass the special checkboxes to
- * content_access_disable_checkboxes()
- *
- * @todo Find a way to include the file in Rules' form
- */
-function content_access_rules_disable_checkboxes($element) {
-  $roles = array_map('filter_xss_admin', user_roles());
-  $roles = array_flip($roles);
-
-  foreach ($element['#options'] as $select_key => $role_name) {
-    $rid = $roles[$role_name];
-    $option = array($rid => array('#title' => $role_name));
-    $option = content_access_disable_checkboxes($option);
-
-    if (isset($option[$rid]['#disabled'])) {
-      $element[$select_key] += $option[$rid];
-      $element[$select_key]['#default_value'] = $select_key;
     }
   }
 
