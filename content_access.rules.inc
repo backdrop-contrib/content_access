@@ -49,6 +49,7 @@ function content_access_rules_action_info() {
       ),
       'group' => t('Content Access'),
       'callbacks' => array(
+        // @todo access callback (Drupal's access) for this operation.
         #'access' => 'rules_action_entity_createfetch_access',
         'form_alter' => 'content_access_action_form_alter',
       ),
@@ -59,14 +60,14 @@ function content_access_rules_action_info() {
 }
 
 /**
- * Desc.
+ * Returns an array of operations used by the module.
  */
 function content_access_action_roles_permissions_list() {
   return _content_access_roles_list();
 }
 
 /**
- * Returns an array of operations used by the module.
+ * Helper function to return the array of available access operations.
  */
 function _content_access_roles_list() {
   $defaults = array();
@@ -74,7 +75,7 @@ function _content_access_roles_list() {
 
   // Make sure defaults are set properly
   foreach (_content_access_get_operations() as $op => $label) {
-    foreach ($roles as $role) {
+    foreach ($roles as $rid => $role) {
       $defaults[$op][$op . ':' . $role] = $role;
     }
   }
@@ -87,23 +88,43 @@ function _content_access_roles_list() {
  * a submit callback to the form submit button.
  */
 function content_access_action_form_alter(&$form, &$form_state) {
-  // Include content_access.admin.inc in order to use it's functions
-  // e.g. content_access_disable_checkboxes() in
-  // content_access_rules_role_based_form()
-  #$include_file = drupal_get_path('module', 'content_access') . '/content_access.admin.inc';
-  #$form_state['build_info']['files']['content_access'] = $include_file;
-  #module_load_include('inc', 'content_access', 'content_access.admin');
-
   // Alter the text<list> to make it into checkboxes groups
-  $ca_element =& $form['parameter']['content_access']['settings']['content_access'];
-  $ca_element = content_access_list_to_checkboxes($ca_element);
+  $ca_elements =& $form['parameter']['content_access']['settings']['content_access'];
+  $ca_elements = content_access_list_to_checkboxes($ca_elements);
 
-  // Add submit callback to process content_access_rules_role_based_form() vals
-  // @todo I think this should go into Rules just like the default form
-  // behaviour
+  // Check and disable default roles.
+  module_load_include('inc', 'content_access', 'content_access.admin');
+  foreach ($ca_elements as $op => $select) {
+    $ca_elements[$op]['#process'] = array('form_process_checkboxes', 'content_access_rules_disable_checkboxes');
+  }
+
+  // Add submit callback to process content_access_rules_role_based_form()
   // rules_ui_edit_element_submit is the default submit callback so we add it
-  // again
+  // again.
+  // @todo I think this should go into Rules just like in FAPI
   $form['submit']['#submit'] = array('content_access_action_settings_form_submit', 'rules_ui_edit_element_submit');
+}
+
+/**
+ * Manipulate and pass the special checkboxes to
+ * content_access_disable_checkboxes()
+ */
+function content_access_rules_disable_checkboxes($element) {
+  $roles = array_map('filter_xss_admin', user_roles());
+  $roles = array_flip($roles);
+
+  foreach ($element['#options'] as $select_key => $role_name) {
+    $rid = $roles[$role_name];
+    $option = array($rid => array('#title' => $role_name));
+    $option = content_access_disable_checkboxes($option);
+
+    if (isset($option[$rid]['#disabled'])) {
+      $element[$select_key] += $option[$rid];
+      $element[$select_key]['#default_value'] = $select_key;
+    }
+  }
+
+  return $element;
 }
 
 /**
