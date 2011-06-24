@@ -49,8 +49,6 @@ function content_access_rules_action_info() {
       ),
       'group' => t('Content Access'),
       'callbacks' => array(
-        // @todo access callback (Drupal's access) for this operation.
-        #'access' => 'rules_action_entity_createfetch_access',
         'form_alter' => 'content_access_action_form_alter',
       ),
     );
@@ -93,7 +91,6 @@ function content_access_action_form_alter(&$form, &$form_state) {
   $ca_elements = content_access_list_to_checkboxes($ca_elements);
 
   // Check and disable default roles.
-  module_load_include('inc', 'content_access', 'content_access.admin');
   foreach ($ca_elements as $op => $select) {
     $ca_elements[$op]['#process'] = array('form_process_checkboxes', 'content_access_rules_disable_checkboxes');
   }
@@ -103,28 +100,6 @@ function content_access_action_form_alter(&$form, &$form_state) {
   // again.
   // @todo I think this should go into Rules just like in FAPI
   $form['submit']['#submit'] = array('content_access_action_settings_form_submit', 'rules_ui_edit_element_submit');
-}
-
-/**
- * Manipulate and pass the special checkboxes to
- * content_access_disable_checkboxes()
- */
-function content_access_rules_disable_checkboxes($element) {
-  $roles = array_map('filter_xss_admin', user_roles());
-  $roles = array_flip($roles);
-
-  foreach ($element['#options'] as $select_key => $role_name) {
-    $rid = $roles[$role_name];
-    $option = array($rid => array('#title' => $role_name));
-    $option = content_access_disable_checkboxes($option);
-
-    if (isset($option[$rid]['#disabled'])) {
-      $element[$select_key] += $option[$rid];
-      $element[$select_key]['#default_value'] = $select_key;
-    }
-  }
-
-  return $element;
 }
 
 /**
@@ -160,9 +135,6 @@ function content_access_list_to_checkboxes($element) {
         $checkboxes[$op]['#default_value'][] = $op_role;
       }
     }
-
-    // @todo needed to disable some checkboxes like the admin ones
-    #$checkboxes[$op]['#process'] = array('form_process_checkboxes', 'content_access_checkboxes');
   }
 
   return $checkboxes;

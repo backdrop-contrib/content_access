@@ -301,35 +301,6 @@ function content_access_role_based_form(&$form, $defaults = array()) {
 }
 
 /**
- * Formapi #process callback, that disables checkboxes for roles without access to content
- */
-function content_access_disable_checkboxes($element) {
-  $access_roles = content_access_get_permission_access('access content');
-  $admin_roles = content_access_get_permission_access('administer nodes');
-
-  foreach (element_children($element) as $key) {
-    if (!in_array($key, $access_roles) &&
-        !($key != DRUPAL_ANONYMOUS_RID &&
-        in_array(DRUPAL_AUTHENTICATED_RID, $access_roles))) {
-      $element[$key]['#disabled'] = TRUE;
-      $element[$key]['#default_value'] = FALSE;
-      $element[$key]['#prefix'] = '<span title="' . t("This role is lacking the permission '@perm', so it has no access.", array('@perm' => t('access content'))) . '">';
-      $element[$key]['#suffix'] = "</span>";
-    }
-    elseif (in_array($key, $admin_roles) ||
-            ($key != DRUPAL_ANONYMOUS_RID && in_array(DRUPAL_AUTHENTICATED_RID, $admin_roles))) {
-      // Fix the checkbox to be enabled for users with administer node privileges
-      $element[$key]['#disabled'] = TRUE;
-      $element[$key]['#default_value'] = TRUE;
-      $element[$key]['#prefix'] = '<span title="' . t("This role has '@perm' permission, so access is granted.", array('@perm' => t('administer nodes'))) . '">';
-      $element[$key]['#suffix'] = "</span>";
-    }
-  }
-
-  return $element;
-}
-
-/**
  * Formapi #after_build callback, that disables checkboxes for roles without access to content.
  */
 function content_access_force_permissions($element, &$form_state) {
