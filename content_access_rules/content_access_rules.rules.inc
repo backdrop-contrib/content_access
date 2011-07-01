@@ -371,5 +371,10 @@ function content_access_action_user_grant($node, $uid, $op) {
   acl_node_add_acl($node->nid, $acl_id, (int) ($op == 'view'), (int) ($op == 'update'), (int) ($op == 'delete'), content_access_get_settings('priority', $node->type));
   acl_add_user($acl_id, $uid);
 
-  node_access_acquire_grants($node);
+  // node_save() does implement node_access_acquire_grants() so we don't want
+  // to execute it again or we'll get a duplicated key exception
+  if (!isset($node->op) ||
+     (isset($node->op) && $node->op != 'Save')) {
+    node_access_acquire_grants($node);
+  }
 }
