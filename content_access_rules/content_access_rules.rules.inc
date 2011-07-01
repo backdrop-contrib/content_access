@@ -48,6 +48,9 @@ function content_access_rules_rules_action_info() {
       'label' => t('Revoke content permissions by role'),
       'description' => t('Revoke node permissions from specific role(s).'),
     ),
+  );
+
+  $reset_actions = array(
     'content_access_action_reset_node_permissions' => array(
       'label' => t('Reset content permissions'),
       'description' => t('Reset node permissions to default permissions.'),
@@ -62,10 +65,6 @@ function content_access_rules_rules_action_info() {
     'content_access_action_user_grant_update' => array(
       'label' => t('Grant user update access'),
       'description' => t('Grant node update to specific user(s).'),
-    ),
-    'content_access_action_user_grant_delete' => array(
-      'label' => t('Grant user delete access'),
-      'description' => t('Grant node delete to specific user(s).'),
     ),
   );
 
@@ -92,6 +91,21 @@ function content_access_rules_rules_action_info() {
       'callbacks' => array(
         'form_alter' => 'content_access_action_form_alter',
       ),
+    );
+  }
+
+  foreach ($reset_actions as $name => $action) {
+    $items[$name] = array(
+      'label' => $action['label'],
+      'named parameter' => TRUE,
+      'parameter' => array(
+        'node' => array(
+          'type' => 'node',
+          'label' => t('Content'),
+          'description' => $action['description'],
+        ),
+      ),
+      'group' => t('Content Access Reset'),
     );
   }
 
@@ -149,6 +163,10 @@ function _content_access_roles_list() {
  * a submit callback to the form submit button.
  */
 function content_access_action_form_alter(&$form, &$form_state) {
+  // per node access control should be enabled for this type of action to be
+  // effective
+  drupal_set_message(t('Access control settings will not be executed for the affected node unless you enabled \'%per_node\' from the Access Control tab on content type page of the node', array('%per_node' => 'Per content node access control settings')), 'warning');
+
   // Alter the text<list> to make it into checkboxes groups
   $ca_elements =& $form['parameter']['content_access']['settings']['content_access'];
   $ca_elements = content_access_list_to_checkboxes($ca_elements);
@@ -187,7 +205,7 @@ function content_access_list_to_checkboxes($element) {
 
   foreach ($operations as $op => $label) {
     $checkboxes[$op] = $element;
-    $checkboxes[$op]['#title'] = t($label);
+    $checkboxes[$op]['#title'] = t("@label", array('@label' => $label));
     $checkboxes[$op]['#type'] = 'checkboxes';
     $checkboxes[$op]['#options'] = $element['#options'][$op];
     unset($checkboxes[$op]['#default_value']);
@@ -237,42 +255,47 @@ function content_access_checkboxes_to_list_submit($element) {
  * Action implementation: Grant permissions for a node.
  */
 function content_access_action_grant_node_permissions($params) {
-  // @todo what if content is not node?
-  if (_content_access_rules_check_setting($params['node'])) {
-    $settings = content_access_action_settings($params['content_access']);
-    content_access_save_per_node_settings($params['node'], $settings);
-    // @todo find a better way to check for node save?
-    if (!content_access_rules_check_grants($params['node']->nid) && $params['node']->op != 'Save') {
-      node_access_acquire_grants($params['node']);
-    }
-
-    // A following node_save() updates the grants for us.
-    return array('node' => $params['node']);
-  }
+  content_access_action_save($params, array('op' => 'grant'));
 }
 
 /**
  * Action implementation: Revoke permissions for a node.
  */
 function content_access_action_revoke_node_permissions($params) {
-  if (_content_access_rules_check_setting($params['node'])) {
-    $settings = content_access_action_settings($params['content_access']);
-    content_access_save_per_node_settings($params['node'], $settings);
-    if (!content_access_rules_check_grants($params['node']->nid) && $params['node']->op != 'Save') {
-      node_access_acquire_grants($params['node']);
-    }
-
-    // A following node_save() updates the grants for us.
-    return array('node' => $params['node']);
-  }
+  content_access_action_save($params, array('op' => 'revoke'));
 }
 
 /**
  * Action implementation: Reset permissions for a node.
  */
 function content_access_action_reset_node_permissions($params) {
-  if (_content_access_rules_check_setting($params['node'])) {
-    content_access_delete_per_node_settings($params['node']);
+  content_access_delete_per_node_settings($params['node']);
+  return array('node' => $params['node']);
+}
+
+/**
+ * Execute grant or revoke action
+ */
+function content_access_action_save($params, $options) {
+  if (!empty($params['node']->nid) && _content_access_rules_check_setting($params['node'])) {
+    $settings = content_access_action_settings($params['content_access']);
+
+    if ($options['op'] == 'revoke') {
+      $ca_settings = array();
+      foreach (content_access_action_settings() as $op => $value) {
+        $ca_settings[$op] = array_diff(content_access_per_node_setting($op, $params['node']), $settings[$op]);
+      }
+      $settings = $ca_settings;
+    }
+
+    content_access_save_per_node_settings($params['node'], $settings);
+
+    // node_save() does implement node_access_acquire_grants() so we don't want
+    // to execute it again or we'll get a duplicated key exception
+    if (!isset($params['node']->op) ||
+        (isset($params['node']->op) && $params['node']->op != 'Save')) {
+      node_access_acquire_grants($params['node']);
+    }
 
     // A following node_save() updates the grants for us.
     return array('node' => $params['node']);
@@ -301,29 +324,20 @@ function _content_access_rules_check_setting($node) {
 /**
  * Split the settings string into array.
  */
-function content_access_action_settings($param) {
+function content_access_action_settings($action_settings = array()) {
   $roles_ids = array_flip(user_roles());
 
   foreach (_content_access_get_operations() as $op => $label) {
     $settings[$op] = array();
   }
 
-  foreach ($param as $op_role => $role) {
+  foreach ($action_settings as $op_role => $role) {
     $op = substr($op_role, 0, strpos($op_role, ':'));
     $rid = $roles_ids[$role];
     $settings[$op][] = $rid;
   }
 
   return $settings;
-}
-
-/**
- * Check if a given nid has grants in {node_access} or not.
- */
-function content_access_rules_check_grants($nid) {
-  return db_select('node_access')
-          ->condition('nid', $nid)
-          ->countQuery()->execute()->fetchField();
 }
 
 /**

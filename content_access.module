@@ -443,9 +443,9 @@ function content_access_get_per_node_settings($node) {
  * Saves custom per node settings in the own content_access table.
  */
 function content_access_save_per_node_settings($node, $settings) {
-  $count = db_query('SELECT COUNT(nid) FROM {content_access} WHERE nid = :nid', array(
-    ':nid' => $node->nid,
-  ))->fetchField();
+  $count = db_select('content_access')
+            ->condition('nid', $node->nid)
+            ->countQuery()->execute()->fetchField();
 
   if ($count > 0) {
     db_update('content_access')
