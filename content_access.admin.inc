@@ -20,7 +20,7 @@ function content_access_page($form, &$form_state, $node) {
   }
 
   // Get roles form
-  content_access_role_based_form($form, $defaults);
+  content_access_role_based_form($form, $defaults, $node->type);
 
   // Add an after_build handler that disables checkboxes, which are enforced by permissions.
   $form['per_role']['#after_build'] = array('content_access_force_permissions');
@@ -122,7 +122,7 @@ function content_access_admin_settings($form, $form_state, $content_type) {
   foreach (_content_access_get_operations() as $op => $label) {
     $defaults[$op] = content_access_get_settings($op, $type);
   }
-  content_access_role_based_form($form, $defaults);
+  content_access_role_based_form($form, $defaults, $type);
 
   // Per node:
   $form['node'] = array(
@@ -267,7 +267,7 @@ function content_access_save_permissions($roles_permissions) {
  * @param $defaults
  *   Array of defaults for all operations.
  */
-function content_access_role_based_form(&$form, $defaults = array()) {
+function content_access_role_based_form(&$form, $defaults = array(), $type = NULL) {
   $form['per_role'] = array(
     '#type' => 'fieldset',
     '#title' => t('Role based access control settings'),
@@ -276,7 +276,7 @@ function content_access_role_based_form(&$form, $defaults = array()) {
       ' ' . t('Furthermore note that content which is not @published is treated in a different way by drupal: It can be viewed only by its author or users with the %administer_nodes permission.', array('@published' => t('published'), '%administer_nodes' => t('administer nodes'))),
   );
 
-  $operations = _content_access_get_operations();
+  $operations = _content_access_get_operations($type);
   $roles = array_map('filter_xss_admin', user_roles());
   foreach ($operations as $op => $label) {
     // Make sure defaults are set properly

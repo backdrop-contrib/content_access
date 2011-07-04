@@ -597,14 +597,14 @@ function content_access_form_alter(&$form, $form_state, $form_id) {
 /**
  * Returns an array of possible operations on content and their labels.
  */
-function _content_access_get_operations() {
+function _content_access_get_operations($type = NULL) {
   $operations = array(
-    'view' => t('View any content'),
-    'view_own' => t('View own content'),
-    'update' => t('Edit any content'),
-    'update_own' => t('Edit own content'),
-    'delete' => t('Delete any content'),
-    'delete_own' => t('Delete own content'),
+    'view' => t('View any @type content', array('@type' => $type)),
+    'view_own' => t('View own @type content', array('@type' => $type)),
+    'update' => t('Edit any @type content', array('@type' => $type)),
+    'update_own' => t('Edit own @type content', array('@type' => $type)),
+    'delete' => t('Delete any @type content', array('@type' => $type)),
+    'delete_own' => t('Delete own @type content', array('@type' => $type)),
   );
   return $operations;
 }
