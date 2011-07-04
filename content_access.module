@@ -47,6 +47,7 @@ function content_access_menu() {
     'theme callback' => '_node_custom_theme',
     'type' => MENU_LOCAL_TASK,
     'weight' => 3,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
   );
 
   $items['admin/structure/types/manage/%node_type/access'] = array(
