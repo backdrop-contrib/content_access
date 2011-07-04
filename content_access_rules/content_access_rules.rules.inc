@@ -270,6 +270,7 @@ function content_access_action_revoke_node_permissions($params) {
  */
 function content_access_action_reset_node_permissions($params) {
   content_access_delete_per_node_settings($params['node']);
+  content_access_action_aquire_grants($params['node']);
   return array('node' => $params['node']);
 }
 
@@ -289,13 +290,7 @@ function content_access_action_save($params, $options) {
     }
 
     content_access_save_per_node_settings($params['node'], $settings);
-
-    // node_save() does implement node_access_acquire_grants() so we don't want
-    // to execute it again or we'll get a duplicated key exception
-    if (!isset($params['node']->op) ||
-        (isset($params['node']->op) && $params['node']->op != 'Save')) {
-      node_access_acquire_grants($params['node']);
-    }
+    content_access_action_aquire_grants($params['node']);
 
     // A following node_save() updates the grants for us.
     return array('node' => $params['node']);
@@ -371,10 +366,16 @@ function content_access_action_user_grant($node, $uid, $op) {
   acl_node_add_acl($node->nid, $acl_id, (int) ($op == 'view'), (int) ($op == 'update'), (int) ($op == 'delete'), content_access_get_settings('priority', $node->type));
   acl_add_user($acl_id, $uid);
 
+  content_access_action_aquire_grants($node);
+}
+
+/**
+ * Apply the new grants to the affected node.
+ */
+function content_access_action_aquire_grants($node) {
   // node_save() does implement node_access_acquire_grants() so we don't want
   // to execute it again or we'll get a duplicated key exception
-  if (!isset($node->op) ||
-     (isset($node->op) && $node->op != 'Save')) {
+  if (!isset($node->op) || (isset($node->op) && $node->op != 'Save')) {
     node_access_acquire_grants($node);
   }
 }
