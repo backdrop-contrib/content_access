@@ -58,13 +58,15 @@ function content_access_rules_rules_action_info() {
   );
 
   $user_actions = array(
-    'content_access_action_user_grant_view' => array(
-      'label' => t('Grant user view access'),
+    'content_access_action_user_grant' => array(
+      'label' => t('Grant user access'),
       'description' => t('Grant node view to specific user(s).'),
+      'ca_action' => 'Grant',
     ),
-    'content_access_action_user_grant_update' => array(
-      'label' => t('Grant user update access'),
-      'description' => t('Grant node update to specific user(s).'),
+    'content_access_action_user_revoke' => array(
+      'label' => t('Revoke user access'),
+      'description' => t('Revoke user access'),
+      'ca_action' => 'Revoke',
     ),
   );
 
@@ -120,10 +122,23 @@ function content_access_rules_rules_action_info() {
             'label' => t('Content'),
             'description' => $action['description'],
           ),
-          'content_access' => array(
+          'content_access_user_view' => array(
             'type' => 'user',
-            'label' => t('User Based Access Control Settings'),
-            'description' => t('User to grant permissions.'),
+            'label' => t('@action user view access', array('@action' => $action['ca_action'])),
+            'optional' => TRUE,
+            'description' => t('@action the following user.', array('@action' => $action['ca_action'])),
+          ),
+          'content_access_user_update' => array(
+            'type' => 'user',
+            'label' => t('@action user update access', array('@action' => $action['ca_action'])),
+            'optional' => TRUE,
+            'description' => t('@action the following user.', array('@action' => $action['ca_action'])),
+          ),
+          'content_access_user_delete' => array(
+            'type' => 'user',
+            'label' => t('@action user delete access', array('@action' => $action['ca_action'])),
+            'optional' => TRUE,
+            'description' => t('@action the following user.', array('@action' => $action['ca_action'])),
           ),
         ),
         'group' => t('Content Access User'),
@@ -336,35 +351,51 @@ function content_access_action_settings($action_settings = array()) {
 }
 
 /**
- * Action implementation: Grant user view access.
+ * Action implementation: Grant user access.
  */
-function content_access_action_user_grant_view($params) {
-  content_access_action_user_grant($params['node'], $params['content_access']->uid, 'view');
+function content_access_action_user_grant($params) {
+  content_access_action_user($params, 'grant');
 }
 
 /**
- * Action implementation: Grant user update access.
+ * Action implementation: Revoke user access.
  */
-function content_access_action_user_grant_update($params) {
-  content_access_action_user_grant($params['node'], $params['content_access']->uid, 'update');
-}
-
-/**
- * Action implementation: Grant user delete access.
- */
-function content_access_action_user_grant_delete($params) {
-  content_access_action_user_grant($params['node'], $params['content_access']->uid, 'delete');
+function content_access_action_user_revoke($params) {
+  content_access_action_user($params, 'revoke');
 }
 
 /**
  * Process Rule's param, and grant by the passed operation.
  */
-function content_access_action_user_grant($node, $uid, $op) {
-  module_load_include('inc', 'content_access', 'content_access.admin');
+function content_access_action_user($params, $type) {
+  $ops = array('view', 'update', 'delete');
+  $settings = array();
+  $node = $params['node'];
 
-  $acl_id = content_access_get_acl_id($node, $op);
-  acl_node_add_acl($node->nid, $acl_id, (int) ($op == 'view'), (int) ($op == 'update'), (int) ($op == 'delete'), content_access_get_settings('priority', $node->type));
-  acl_add_user($acl_id, $uid);
+  foreach ($ops as $op) {
+    if ($params['content_access_user_' . $op]) {
+      $settings[$op] = $params['content_access_user_' . $op]->uid;
+    }
+  }
+
+  foreach ($settings as $op => $uid) {
+    $acl_id = content_access_get_acl_id($node, $op);
+    acl_node_add_acl($node->nid, $acl_id, (int) ($op == 'view'), (int) ($op == 'update'), (int) ($op == 'delete'), content_access_get_settings('priority', $node->type));
+
+    db_delete('acl_user')
+      ->condition('acl_id', $acl_id)
+      ->condition('uid', $uid)
+      ->execute();
+
+    if ($type == 'grant') {
+      db_insert('acl_user')
+        ->fields(array(
+          'acl_id' => $acl_id,
+          'uid' => $uid,
+        ))
+        ->execute();
+    }
+  }
 
   content_access_action_aquire_grants($node);
 }
@@ -375,7 +406,8 @@ function content_access_action_user_grant($node, $uid, $op) {
 function content_access_action_aquire_grants($node) {
   // node_save() does implement node_access_acquire_grants() so we don't want
   // to execute it again or we'll get a duplicated key exception
-  if (!isset($node->op) || (isset($node->op) && $node->op != 'Save')) {
+  if (!isset($node->op) ||
+      (isset($node->op) && $node->op != 'Save')) {
     node_access_acquire_grants($node);
   }
 }

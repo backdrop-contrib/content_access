@@ -93,7 +93,6 @@ function content_access_page_submit($form, &$form_state) {
 
   // Apply new settings.
   node_access_acquire_grants($node);
-  cache_clear_all();
 
   drupal_set_message(t('Your changes have been saved.'));
 }
@@ -104,7 +103,6 @@ function content_access_page_submit($form, &$form_state) {
 function content_access_page_reset($form, &$form_state) {
   content_access_delete_per_node_settings($form_state['node']);
   node_access_acquire_grants($form_state['node']);
-  cache_clear_all();
 
   drupal_set_message(t('The permissions have been reseted to the content type defaults.'));
 }
@@ -343,30 +341,5 @@ function content_access_user_admin_perm_submit($form, $form_state) {
       'Permissions have been successfully rebuilt for the content types @types.',
       array('@types' => implode(', ', $types))
     ));
-  }
-}
-
-function _content_access_get_node_permissions($type) {
-  return array_filter(array_map('content_access_get_permission_by_op', array_flip(_content_access_get_operations()), array_fill(0, 6, $type)));
-}
-
-/**
- * Gets the content access acl id of the node.
- */
-function content_access_get_acl_id($node, $op) {
-  $acl_id = acl_get_id_by_name('content_access', $op . '_' . $node->nid);
-  if (!$acl_id) {
-    $acl_id = acl_create_new_acl('content_access', $op . '_' . $node->nid);
-  }
-  return $acl_id;
-}
-
-/**
- * Detaches all our ACLs for the nodes of the given type.
- */
-function _content_access_remove_acls($type) {
-  $result = db_query("SELECT n.nid FROM {node} n WHERE type = :type", array('type' => $type));
-  foreach ($result as $node) {
-    acl_node_clear_acls($node->nid, 'content_access');
   }
 }

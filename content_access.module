@@ -638,3 +638,31 @@ function content_access_disable_checkboxes($element) {
 
   return $element;
 }
+
+/**
+ * Gets node's access permissions.
+ */
+function _content_access_get_node_permissions($type) {
+  return array_filter(array_map('content_access_get_permission_by_op', array_flip(_content_access_get_operations()), array_fill(0, 6, $type)));
+}
+
+/**
+ * Gets the content access acl id of the node.
+ */
+function content_access_get_acl_id($node, $op) {
+  $acl_id = acl_get_id_by_name('content_access', $op . '_' . $node->nid);
+  if (!$acl_id) {
+    $acl_id = acl_create_new_acl('content_access', $op . '_' . $node->nid);
+  }
+  return $acl_id;
+}
+
+/**
+ * Detaches all our ACLs for the nodes of the given type.
+ */
+function _content_access_remove_acls($type) {
+  $result = db_query("SELECT n.nid FROM {node} n WHERE type = :type", array('type' => $type));
+  foreach ($result as $node) {
+    acl_node_clear_acls($node->nid, 'content_access');
+  }
+}
