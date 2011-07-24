@@ -1,5 +1,7 @@
 Content Access 7.x-1.2-beta1, 2011-07-24
 --------------------------------------
+#1058526 by BenK, good_man: Rules 2.x integration.
+#572812 by NikLP, good_man: Add content type to permission title.
 #1135466 by Firewolf, videographics, good_man: Renaming a content type results
   in notices.
 #1144510 by good_man: Fix roles selection in test case.
