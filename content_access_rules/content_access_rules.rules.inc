@@ -310,7 +310,7 @@ function _content_access_rules_check_setting($node) {
 
   // If we didn't find any settings in content access for this type return
   // false as we don't want to process it.
-  rules_log(t("Can't set per content permissions for content type @type. Make sure to have per content settings activated for content types you want to alter access control for.", array('@type' => $node->type)), RulesLog::WARN);
+  rules_log("Can't set per content permissions for content type @type. Make sure to have per content settings activated for content types you want to alter access control for.", array('@type' => $node->type), RulesLog::WARN);
   return FALSE;
 }
 
