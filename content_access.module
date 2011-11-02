@@ -235,8 +235,6 @@ function content_access_set_settings($settings) {
   }
 
   variable_set('content_access_settings', $settings);
-
-  module_invoke_all('content_type_access', $settings);
 }
 
 /**
