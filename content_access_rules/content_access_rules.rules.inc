@@ -61,10 +61,12 @@ function content_access_rules_rules_action_info() {
   $user_actions = array(
     'content_access_action_user_grant' => array(
       'label' => t('Grant access by user'),
+      'operation' => t('Grant'),
       'description' => t('Grant access to the following content'),
     ),
     'content_access_action_user_revoke' => array(
       'label' => t('Revoke access by user'),
+      'operation' => t('Revoke'),
       'description' => t('Revoke access to the following content'),
     ),
   );
@@ -121,21 +123,21 @@ function content_access_rules_rules_action_info() {
           ),
           'content_access_user_view' => array(
             'type' => 'user',
-            'label' => t('@action view access', array('@action' => $action['ca_action'])),
+            'label' => t('@action view access', array('@action' => $action['operation'])),
             'optional' => TRUE,
-            'description' => t('@action view access to the following user.', array('@action' => $action['ca_action'])),
+            'description' => t('@action view access to the following user.', array('@action' => $action['operation'])),
           ),
           'content_access_user_update' => array(
             'type' => 'user',
-            'label' => t('@action update access', array('@action' => $action['ca_action'])),
+            'label' => t('@action update access', array('@action' => $action['operation'])),
             'optional' => TRUE,
-            'description' => t('@action edit access to the following user.', array('@action' => $action['ca_action'])),
+            'description' => t('@action edit access to the following user.', array('@action' => $action['operation'])),
           ),
           'content_access_user_delete' => array(
             'type' => 'user',
-            'label' => t('@action delete access', array('@action' => $action['ca_action'])),
+            'label' => t('@action delete access', array('@action' => $action['operation'])),
             'optional' => TRUE,
-            'description' => t('@action delete access to the following user.', array('@action' => $action['ca_action'])),
+            'description' => t('@action delete access to the following user.', array('@action' => $action['operation'])),
           ),
         ),
         'group' => t('Content Access User'),
