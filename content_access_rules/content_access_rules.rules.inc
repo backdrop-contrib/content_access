@@ -302,12 +302,10 @@ function content_access_action_reset_node_permissions($node) {
  */
 function _content_access_rules_check_setting($node) {
   $type = $node->type;
-  $settings = variable_get('content_access_settings', array());
+  $settings = variable_get('content_access_' . $type, array());
 
-  foreach ($settings as $setting) {
-    if (isset($setting[$type]) && $setting[$type]) {
-      return TRUE;
-    }
+  if (isset($settings['per_node']) && $settings['per_node']) {
+    return TRUE;
   }
 
   // If we didn't find any settings in content access for this type return
