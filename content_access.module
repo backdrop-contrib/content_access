@@ -595,7 +595,7 @@ function content_access_disable_checkboxes($element) {
         !in_array(DRUPAL_AUTHENTICATED_RID, $access_roles)) {
       $element[$key]['#disabled'] = TRUE;
       $element[$key]['#default_value'] = FALSE;
-      $element[$key]['#prefix'] = '<span title="' . t("This role is lacking the permission '@perm', so it has no access.", array('@perm' => t('access content'))) . '">';
+      $element[$key]['#prefix'] = '<span' . drupal_attributes(array('title' => t("This role is lacking the permission '@perm', so it has no access.", array('@perm' => t('access content'))))) . '>';
       $element[$key]['#suffix'] = "</span>";
     }
     elseif (in_array($key, $admin_roles) ||
@@ -603,7 +603,7 @@ function content_access_disable_checkboxes($element) {
       // Fix the checkbox to be enabled for users with administer node privileges
       $element[$key]['#disabled'] = TRUE;
       $element[$key]['#default_value'] = TRUE;
-      $element[$key]['#prefix'] = '<span title="' . t("This role has '@perm' permission, so access is granted.", array('@perm' => t('administer nodes'))) . '">';
+      $element[$key]['#prefix'] = '<span' . drupal_attributes(array('title' => t("This role has '@perm' permission, so access is granted.", array('@perm' => t('administer nodes'))))) . '>';
       $element[$key]['#suffix'] = "</span>";
     }
   }

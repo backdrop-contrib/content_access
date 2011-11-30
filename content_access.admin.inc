@@ -311,7 +311,7 @@ function content_access_force_permissions($element, &$form_state) {
       $element[$op][$rid]['#attributes']['disabled'] = 'disabled';
       $element[$op][$rid]['#value'] = TRUE;
       $element[$op][$rid]['#checked'] = TRUE;
-      $element[$op][$rid]['#prefix'] = '<span title="' . t("Permission is granted due to the content type's access control settings.") . '">';
+      $element[$op][$rid]['#prefix'] = '<span' . drupal_attributes(array('title' => t("Permission is granted due to the content type's access control settings."))) . '>';
       $element[$op][$rid]['#suffix'] = "</span>";
     }
   }
