@@ -1,0 +1,43 @@
+<?php
+
+/**
+ * @file
+ * Content access install file.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function content_access_update_1000() {
+  $config = config('content_access.settings');
+  $config->set('content_access_article', update_variable_get('content_access_article'));
+  $config->set('content_access_page', update_variable_get('content_access_page'));
+  $config->save();
+
+  // Delete variables.
+  update_variable_del('content_access_article');
+  update_variable_del('content_access_page');
+}
+
+/**
+ * Implements hook_schema().
+ */
+function content_access_schema() {
+  $schema['content_access'] = array(
+    'fields' => array(
+      'nid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0
+      ),
+      'settings' => array(
+        'type' => 'text',
+        'not null' => FALSE,
+        'size' => 'medium'
+      ),
+    ),
+    'primary key' => array('nid')
+  );
+  return $schema;
+}
