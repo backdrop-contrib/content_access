@@ -1,0 +1,11 @@
+[ContentAccessModuleTestCase]
+name = Content Access Module Tests
+description = Automated SimpleTest Case for content access module.
+group = Content Access
+file = content_access.test
+
+[ContentAccessACLTestCase]
+name = Content Access Module Tests
+description = Automated SimpleTest Case for content access module with ACL.
+group = Content Access
+file = content_access.test

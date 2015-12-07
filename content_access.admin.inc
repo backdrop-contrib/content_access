@@ -188,7 +188,12 @@ function content_access_admin_settings($form, &$form_state, $content_type) {
  * Submit handler for per content type settings form.
  */
 function content_access_admin_settings_submit($form, &$form_state) {
-  $roles_permissions = user_role_permissions(user_roles());
+  $roles_permissions = array();
+  foreach (user_roles(FALSE, NULL, TRUE) as $machine_name => $role_object) {
+    foreach ($role_object->permissions as $key => $permission) {
+      $roles_permissions[$machine_name][$permission] = TRUE;
+    }
+  }
   $permissions = user_permission_get_modules();
   $type = $form_state['type'];
 

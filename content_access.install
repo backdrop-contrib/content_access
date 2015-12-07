@@ -8,6 +8,18 @@
 /**
  * Implements hook_install().
  */
+function content_access_install() {
+  $node_types = node_type_get_types();
+  $config = config('content_access.settings');
+  foreach ($node_types as $type) {
+    $config->set('content_access_' . $type->type, array());
+  }
+  $config->save();
+}
+
+/**
+ * Implements hook_install().
+ */
 function content_access_update_1000() {
   $config = config('content_access.settings');
   $config->set('content_access_article', update_variable_get('content_access_article'));

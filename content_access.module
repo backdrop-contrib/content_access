@@ -39,7 +39,6 @@ function content_access_menu() {
     'access callback' => 'content_access_node_page_access',
     'access arguments' => array(1),
     'file' => 'content_access.admin.inc',
-    'theme callback' => '_node_custom_theme',
     'type' => MENU_LOCAL_TASK,
     'weight' => 3,
     'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
@@ -54,7 +53,6 @@ function content_access_menu() {
     'access arguments' => array(),
     'type' => MENU_LOCAL_TASK,
     'file' => 'content_access.admin.inc',
-    'theme callback' => '_node_custom_theme',
     'weight' => 1,
   );
 
@@ -75,6 +73,22 @@ function content_access_permission() {
       'description' => t('View and modify content access for own nodes'),
     ),
   );
+}
+
+/**
+ * Implements hook_user_role_insert().
+ */
+function content_access_user_role_insert($role) {
+  content_access_get_gid_from_role($role->name, 'process');
+}
+
+/**
+ * Implements hook_node_type_insert().
+ */
+function content_access_node_type_insert($info) {
+  $config = config('content_access.settings');
+  $config->set('content_access_' . $info->type, array());
+  $config->save();
 }
 
 /**
@@ -99,7 +113,7 @@ function content_access_admin_settings_access() {
 function content_access_node_grants($account, $op) {
   return array(
     'content_access_author' => array($account->uid),
-    'content_access_rid' => array_keys($account->roles),
+    'content_access_rid' => content_access_get_gid_from_role($account->roles, 'grants'),
   );
 }
 
@@ -203,7 +217,7 @@ function content_access_disabling($set = NULL) {
  */
 function content_access_get_settings($setting, $type_name) {
   $settings = array();
-  // $settings = config_get('content_access.settings', 'content_access_' . $type_name);
+  $settings = config_get('content_access.settings', 'content_access_' . $type_name);
   $settings += content_access_get_setting_defaults($type_name);
   if ($setting == 'all') {
     return $settings;
@@ -239,7 +253,7 @@ function content_access_available_settings() {
  */
 function content_access_get_setting_defaults($type) {
   $defaults = array();
-  $defaults['view'] = $defaults['view_own'] = array(BACKDROP_ANONYMOUS_RID, BACKDROP_AUTHENTICATED_RID);
+  $defaults['view'] = $defaults['view_own'] = array(BACKDROP_ANONYMOUS_ROLE, BACKDROP_AUTHENTICATED_ROLE);
   foreach (array('update', 'delete') as $op) {
     $defaults[$op] = content_access_get_permission_access(content_access_get_permission_by_op($op, $type));
     $defaults[$op . '_own'] = content_access_get_permission_access(content_access_get_permission_by_op($op . '_own', $type));
@@ -316,9 +330,37 @@ function content_access_get_type_grant($node) {
  */
 function content_access_proccess_grant($grant, $gid, $node) {
   $grant += array('grant_view' => 0, 'grant_update' => 0, 'grant_delete' => 0, 'realm' => 'content_access_rid');
-  $grant['gid'] = $gid;
+  $grant['gid'] = content_access_get_gid_from_role($gid, 'process');
   $grant['priority'] = content_access_get_settings('priority', $node->type);
   return $grant;
+}
+
+/**
+ * Get a numeric gid from a role.
+ *todo: cache?
+ */
+function content_access_get_gid_from_role($role, $process) {
+  $config = config('content_access.settings');
+  $gids = $config->get('gids');
+  if ($process == 'grants') {
+    $roles = array();
+    foreach ($role as $rid) {
+      $roles[] = $gids[$rid];
+    }
+// dpm($roles);  
+    return $roles;
+  }
+  elseif ($process == 'process') {
+    if (isset($gids[$role])) {
+      return $gids[$role];
+    }
+    else {
+      $next_id = !empty($gids) ? max($gids) + 1 : 1;
+      $config->set('gids.' . $role, $next_id);
+      $config->save();
+      return $next_id;
+    }
+  }
 }
 
 /**
@@ -333,17 +375,18 @@ function content_access_own_op($node, $any_roles, $own_roles) {
   static $roles = array();
 
   if (!isset($roles[$node->uid])) {
-    $roles[$node->uid] = $node->uid ? array(BACKDROP_AUTHENTICATED_RID) : array(BACKDROP_ANONYMOUS_RID);
-    $result = db_query('SELECT rid FROM {users_roles} WHERE uid = :uid', array(':uid' => $node->uid));
+    $roles[$node->uid] = $node->uid ? array(BACKDROP_AUTHENTICATED_ROLE) : array(BACKDROP_ANONYMOUS_ROLE);
+    $result = db_query('SELECT role FROM {users_roles} WHERE uid = :uid', array(':uid' => $node->uid));
 
     foreach ($result as $role) {
-      $roles[$node->uid][] = $role->rid;
+      $roles[$node->uid][] = $role->role;
     }
   }
   if (array_intersect($roles[$node->uid], $any_roles)) {
     // If there is access due to "any permissions" there is no need to at an author grant.
     return 0;
   }
+
   return array_intersect($roles[$node->uid], $own_roles) ? 1 : 0;
 }
 
@@ -366,8 +409,8 @@ function content_access_get_rids_per_node_op($op, $node) {
     $perm_roles = content_access_get_permission_access($permission);
     $rids = array_diff($rids, $perm_roles);
 
-    if (in_array(BACKDROP_AUTHENTICATED_RID, $perm_roles)) {
-      return in_array(BACKDROP_ANONYMOUS_RID, $rids) ? array(BACKDROP_ANONYMOUS_RID, BACKDROP_AUTHENTICATED_RID) : array(BACKDROP_AUTHENTICATED_RID);
+    if (in_array(BACKDROP_AUTHENTICATED_ROLE, $perm_roles)) {
+      return in_array(BACKDROP_ANONYMOUS_ROLE, $rids) ? array(BACKDROP_ANONYMOUS_ROLE, BACKDROP_AUTHENTICATED_ROLE) : array(BACKDROP_AUTHENTICATED_ROLE);
     }
   }
   return $rids;
@@ -485,7 +528,7 @@ function content_access_optimize_grants(&$grants, $node) {
   }
 
   // Detect if all are allowed to view
-  $all = array(BACKDROP_ANONYMOUS_RID, BACKDROP_AUTHENTICATED_RID);
+  $all = array(BACKDROP_ANONYMOUS_ROLE, BACKDROP_AUTHENTICATED_ROLE);
   if (count(array_diff($all, $rids['view'])) == 0) {
     //grant view access to all instead of single roles
     $rids['view'] = array('all');
@@ -494,8 +537,8 @@ function content_access_optimize_grants(&$grants, $node) {
 
   // If authenticated users are involved, remove unnecessary other roles.
   foreach (array('view', 'update', 'delete') as $op) {
-    if (in_array(BACKDROP_AUTHENTICATED_RID, $rids[$op])) {
-      $rids[$op] = in_array(BACKDROP_ANONYMOUS_RID, $rids[$op]) ? array(BACKDROP_ANONYMOUS_RID, BACKDROP_AUTHENTICATED_RID) : array(BACKDROP_AUTHENTICATED_RID);
+    if (in_array(BACKDROP_AUTHENTICATED_ROLE, $rids[$op])) {
+      $rids[$op] = in_array(BACKDROP_ANONYMOUS_ROLE, $rids[$op]) ? array(BACKDROP_ANONYMOUS_ROLE, BACKDROP_AUTHENTICATED_ROLE) : array(BACKDROP_AUTHENTICATED_ROLE);
     }
   }
 
@@ -593,15 +636,15 @@ function content_access_disable_checkboxes($element) {
 
   foreach (element_children($element) as $key) {
     if (!in_array($key, $access_roles) &&
-        $key == BACKDROP_ANONYMOUS_RID &&
-        !in_array(BACKDROP_AUTHENTICATED_RID, $access_roles)) {
+        $key == BACKDROP_ANONYMOUS_ROLE &&
+        !in_array(BACKDROP_AUTHENTICATED_ROLE, $access_roles)) {
       $element[$key]['#disabled'] = TRUE;
       $element[$key]['#default_value'] = FALSE;
       $element[$key]['#prefix'] = '<span' . backdrop_attributes(array('title' => t("This role is lacking the permission '@perm', so it has no access.", array('@perm' => t('access content'))))) . '>';
       $element[$key]['#suffix'] = "</span>";
     }
     elseif (in_array($key, $admin_roles) ||
-            ($key != BACKDROP_ANONYMOUS_RID && in_array(BACKDROP_AUTHENTICATED_RID, $admin_roles))) {
+            ($key != BACKDROP_ANONYMOUS_ROLE && in_array(BACKDROP_AUTHENTICATED_ROLE, $admin_roles))) {
       // Fix the checkbox to be enabled for users with administer node privileges
       $element[$key]['#disabled'] = TRUE;
       $element[$key]['#default_value'] = TRUE;

@@ -1,7 +1,6 @@
 
 Content Access Module
 -----------------------
-by Wolfgang Ziegler, nuppla@zites.net
 
 Yet another node access module.
 This module allows you to manage permissions for content types by role. It allows you to specifiy
@@ -55,6 +54,22 @@ priority *alone*, only its grants will be applied.
 
 By default node access modules use priority 0.
 
+
+LICENSE
+---------------    
+
+This project is GPL v2 software. See the LICENSE.txt file in this directory 
+for complete text.
+
+CURRENT MAINTAINERS
+---------------    
+
+Looking for maintainers
+
+CREDITS   
+--------------- 
+
+This module is a fork of the Drupal version by Wolfgang Ziegler, nuppla@zites.net
 
 
 Footnotes

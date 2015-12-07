@@ -34,8 +34,8 @@ class ContentAccessModuleTestCase extends ContentAccessTestCase {
   function testViewAccess() {
     // Restrict access to the content type (access is only allowed for the author)
     $access_permissions = array(
-      'view[1]' => FALSE,
-      'view[2]' => FALSE,
+      'view[authenticated]' => FALSE,
+      'view[anonymous]' => FALSE,
     );
     $this->changeAccessContentType($access_permissions);
 
@@ -283,7 +283,7 @@ class ContentAccessModuleTestCase extends ContentAccessTestCase {
   function testOwnViewAccess() {
     // Setup 2 test users
     $test_user1 = $this->test_user;
-    $test_user2 = $this->backdropCreateUser();
+    $test_user2 = $this->backdropCreateUser(array('access content'));
 
     // Change ownership of test nodes to test users
     $this->node1->uid = $test_user1->uid;
@@ -293,10 +293,10 @@ class ContentAccessModuleTestCase extends ContentAccessTestCase {
 
     // Remove all view permissions for this content type
     $access_permissions = array(
-      'view[1]' => FALSE,
-      'view[2]' => FALSE,
-      'view_own[1]' => FALSE,
-      'view_own[2]' => FALSE,
+      'view[authenticated]' => FALSE,
+      'view[anonymous]' => FALSE,
+      'view_own[authenticated]' => FALSE,
+      'view_own[anonymous]' => FALSE,
     );
     $this->changeAccessContentType($access_permissions);
 

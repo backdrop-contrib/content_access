@@ -35,15 +35,15 @@ class ContentAccessTestCase extends BackdropWebTestCase {
     }
 
     // Create test user with seperate role
-    $this->test_user = $this->backdropCreateUser();
+    $this->test_user = $this->backdropCreateUser(array('access content'));
 
     // Get the value of the new role
     // Needed in D7 because it's by default create two roles for new users
     // one role is Authenticated and the second is new default one
     // @see backdropCreateUser()
-    foreach ($this->test_user->roles as $rid => $role) {
-      if (!in_array($rid, array(BACKDROP_AUTHENTICATED_RID))) {
-        $this->rid = $rid;
+    foreach ($this->test_user->roles as $role) {
+      if (!in_array($role, array(BACKDROP_AUTHENTICATED_ROLE))) {
+        $this->rid = $role;
         break;
       }
     }
@@ -74,11 +74,11 @@ class ContentAccessTestCase extends BackdropWebTestCase {
   function changeAccessContentTypeKeyword($keyword, $access = TRUE, $user = NULL) {
     if ($user === NULL) {
       $user = $this->test_user;
-      $roles[$this->rid] = $user->roles[$this->rid];
+      $roles[$this->rid] = $this->rid;
     } else {
-      foreach ($user->roles as $rid => $role) {
-        if (!in_array($rid, array(BACKDROP_AUTHENTICATED_RID))) {
-          $roles[$rid] = $user->roles[$rid];
+      foreach ($user->roles as $role) {
+        if (!in_array($role, array(BACKDROP_AUTHENTICATED_ROLE))) {
+          $roles[$role] = $role;
           break;
         }
       }
@@ -106,7 +106,7 @@ class ContentAccessTestCase extends BackdropWebTestCase {
    */
   function changeAccessNodeKeyword($node, $keyword, $access = TRUE) {
     $user = $this->test_user;
-    $roles[$this->rid] = $user->roles[$this->rid];
+    $roles[$this->rid] = $this->rid;
 
     $access_settings = array(
       $keyword .'['. key($roles) .']' => $access,
@@ -119,7 +119,7 @@ class ContentAccessTestCase extends BackdropWebTestCase {
    * Change access permission for a node
    */
   function changeAccessNode($node, $access_settings) {
-    $this->backdropPost('node/'. $node->nid .'/access', $access_settings, t('Submit'));
+    $this->backdropPost('node/'. $node->nid .'/access', $access_settings, t('Save configuration'));
     $this->assertText(t('Your changes have been saved.'), 'access rules of node were updated successfully');
   }
 }
