@@ -8,16 +8,19 @@ content node.
 
 In particular:
 
-  * it comes with sensible defaults, so you need not configure anything and everything stays working
-  * it is as flexible as you want. It can work with per content type settings, per content node settings
-    as well as with flexible Access Control Lists (with the help of the [ACL module](https://backdropcms.org/project/acl)).
-  * it tries to reuse existing functionality instead of reimplementing it. So one can install the ACL
-    module and set per user access control settings per content node.
-    Furthermore the module provides conditions and actions for the Rules module, which allows one
-    to configure even rule-based access permissions.
-  * it optimizes the written content node grants, so that only the really necessary grants are written.
-    This is important for the performance of your site.
-  * it treats access control as importantly as it should. (e.g. the module has a bunch of simpletests to ensure that everything is working right.)
+  * it comes with sensible defaults, so you need not configure anything and 
+    everything stays working
+  * it is as flexible as you want. It can work with per content type settings, 
+    per content node settings as well as with flexible Access Control Lists 
+    (with the help of the [ACL module](https://backdropcms.org/project/acl)).
+  * it tries to reuse existing functionality instead of reimplementing it. So 
+    one can install the ACL module and set per user access control settings 
+    per content node.
+  * it optimizes the written content node grants, so that only the really 
+    necessary grants are written. This is important for the performance of your
+    site.
+  * it treats access control as importantly as it should. (e.g. the module has 
+    a bunch of simpletests to ensure that everything is working right.)
   * it respects and makes use of Backdrop's built in permissions as far as 
     possible. This means the access control tab provided by this module takes 
     these permissions into account and provides you a good overview about the 
@@ -46,13 +49,14 @@ users.
 
 ##Running multiple node access modules on a site (Advanced!)
 
-A Backdrop node access module can only grant access to content nodes, but not deny it. So if you
-are using multiple node access modules, access will be granted to a node as soon as one of the
-module grants access to it.
+A Backdrop node access module can only grant access to content nodes, but not 
+deny it. So if you are using multiple node access modules, access will be 
+granted to a node as soon as one of the module grants access to it.
 
-However you can influence the behaviour by changing the priority of the content access module as
-Backdrop applies *only* the grants with the highest priority. So if `Content Access` has the highest
-priority *alone*, only its grants will be applied. 
+However you can influence the behaviour by changing the priority of the content
+access module as Backdrop applies *only* the grants with the highest priority. 
+So if `Content Access` has the highest priority *alone*, only its grants will 
+be applied. 
 
 By default node access modules use priority 0.
 
@@ -69,10 +73,10 @@ Looking for maintainers
 
  - This module was ported to Backdrop by [Biolithic](https://github.com/biolithic)
 and [Docwilmot](https://github.com/docwilmot).
- - This module is a fork of the Drupal version by [Wolfgang Ziegler](nuppla@zites.net)
+ - This module is a fork of the Drupal version by [Wolfgang Ziegler](mailto:nuppla@zites.net)
 
 ##Footnotes
 
-[1] Note that this overview can't take other modules into account, which might also alter node access.
-    If you have multiple modules installed that alter node access, read the paragraph about "Running 
-    multiple node access modules on a site".
+[1] Note that this overview can't take other modules into account, which might 
+also alter node access. If you have multiple modules installed that alter node 
+access, read the paragraph about "Running multiple node access modules on a site".
