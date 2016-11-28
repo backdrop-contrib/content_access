@@ -9,11 +9,18 @@
  */
 define('CONTENT_ACCESS_MASS_UPDATE_THRESHOLD', 1000);
 
+
+
+
+
+
+
+
 /**
  * Per node settings page.
  */
 function content_access_page($form, &$form_state, $node) {
-  drupal_set_title(t('Access control for @title', array('@title' => $node->title)));
+  backdrop_set_title(t('Access control for @title', array('@title' => $node->title)));
 
   foreach (_content_access_get_operations() as $op => $label) {
     $defaults[$op] = content_access_per_node_setting($op, $node);
@@ -54,16 +61,17 @@ function content_access_page($form, &$form_state, $node) {
     '#submit' => array('content_access_page_reset'),
     '#access' => count(content_access_get_per_node_settings($node)) > 0,
   );
-  $form['submit'] = array(
+  
+  $form['actions']['#type'] = 'actions';
+  $form['actions']['submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Submit'),
-    '#weight' => 10,
+    '#value' => t('Save configuration'),
   );
 
   // @todo not true anymore?
   // http://drupal.org/update/modules/6/7#hook_node_access_records
   if (!$node->status) {
-    drupal_set_message(t("Warning: Your content is not published, so this settings are not taken into account as long as the content remains unpublished."), 'error');
+    backdrop_set_message(t("Warning: Your content is not published, so this settings are not taken into account as long as the content remains unpublished."), 'error');
   }
 
   return $form;
@@ -96,8 +104,16 @@ function content_access_page_submit($form, &$form_state) {
 
   module_invoke_all('per_node', $settings);
 
-  drupal_set_message(t('Your changes have been saved.'));
+  backdrop_set_message(t('Your changes have been saved.'));
 }
+
+
+
+
+
+
+
+
 
 /**
  * Submit callback for reset on content_access_page().
@@ -106,8 +122,18 @@ function content_access_page_reset($form, &$form_state) {
   content_access_delete_per_node_settings($form_state['node']);
   node_access_acquire_grants($form_state['node']);
 
-  drupal_set_message(t('The permissions have been reseted to the content type defaults.'));
+  backdrop_set_message(t('The permissions have been reseted to the content type defaults.'));
 }
+
+
+
+
+
+
+
+
+
+
 
 /**
  * Per content type settings form.
@@ -129,7 +155,7 @@ function content_access_admin_settings($form, &$form_state, $content_type) {
     '#type' => 'fieldset',
     '#title' => t('Per content node access control settings'),
     '#collapsible' => TRUE,
-    '#description' => t('Optionally you can enable per content node access control settings. If enabled, a new tab for the content access settings appears when viewing content. You have to configure permission to access these settings at the !permissions page.', array('!permissions' => l(t('permissions'), 'admin/people/permissions'))),
+    '#description' => t('Optionally you can enable per content node access control settings. If enabled, a new tab for the content access settings appears when viewing content. You have to configure permission to access these settings at the !permissions page.', array('!permissions' => l(t('permissions'), 'admin/config/people/permissions'))),
   );
   $form['node']['per_node'] = array(
     '#type' => 'checkbox',
@@ -162,7 +188,12 @@ function content_access_admin_settings($form, &$form_state, $content_type) {
  * Submit handler for per content type settings form.
  */
 function content_access_admin_settings_submit($form, &$form_state) {
-  $roles_permissions = user_role_permissions(user_roles());
+  $roles_permissions = array();
+  foreach (user_roles(FALSE, NULL, TRUE) as $machine_name => $role_object) {
+    foreach ($role_object->permissions as $key => $permission) {
+      $roles_permissions[$machine_name][$permission] = TRUE;
+    }
+  }
   $permissions = user_permission_get_modules();
   $type = $form_state['type'];
 
@@ -215,12 +246,23 @@ function content_access_admin_settings_submit($form, &$form_state) {
     }
 
     if (content_access_mass_update(array($type))) {
-      drupal_set_message(t('Permissions have been successfully rebuilt for the content type @types.', array('@types' => node_type_get_name($type))));
+      backdrop_set_message(t('Permissions have been successfully rebuilt for the content type @types.', array('@types' => node_type_get_name($type))));
     }
   }
 
-  drupal_set_message(t('Your changes have been saved.'));
+  backdrop_set_message(t('Your changes have been saved.'));
 }
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * Mass updates node access records for nodes of the given types.
@@ -261,6 +303,12 @@ function content_access_save_permissions($roles_permissions) {
   }
 }
 
+
+
+
+
+
+
 /**
  * Builds the role based permission form for the given defaults.
  *
@@ -273,7 +321,7 @@ function content_access_role_based_form(&$form, $defaults = array(), $type = NUL
     '#title' => t('Role based access control settings'),
     '#collapsible' => TRUE,
     '#description' => t('Note that users need at least the %access_content permission to be able to deal in any way with content.', array('%access_content' => t('access content'))) .
-      ' ' . t('Furthermore note that content which is not @published is treated in a different way by drupal: It can be viewed only by its author or users with the %administer_nodes permission.', array('@published' => t('published'), '%administer_nodes' => t('administer nodes'))),
+      ' ' . t('Furthermore note that content which is not @published is treated in a different way by Backdrop: It can be viewed only by its author or users with the %administer_nodes permission.', array('@published' => t('published'), '%administer_nodes' => t('administer nodes'))),
   );
 
   $operations = _content_access_get_operations($type);
@@ -296,7 +344,7 @@ function content_access_role_based_form(&$form, $defaults = array(), $type = NUL
     '#value' => '<br clear="all" />',
   );
 
-  drupal_add_css(drupal_get_path('module', 'content_access') . '/content_access.css');
+  backdrop_add_css(backdrop_get_path('module', 'content_access') . '/content_access.css');
 
   return $form;
 }
@@ -311,7 +359,7 @@ function content_access_force_permissions($element, &$form_state) {
       $element[$op][$rid]['#attributes']['disabled'] = 'disabled';
       $element[$op][$rid]['#value'] = TRUE;
       $element[$op][$rid]['#checked'] = TRUE;
-      $element[$op][$rid]['#prefix'] = '<span' . drupal_attributes(array('title' => t("Permission is granted due to the content type's access control settings."))) . '>';
+      $element[$op][$rid]['#prefix'] = '<span' . backdrop_attributes(array('title' => t("Permission is granted due to the content type's access control settings."))) . '>';
       $element[$op][$rid]['#suffix'] = "</span>";
     }
   }
@@ -338,7 +386,7 @@ function content_access_user_admin_perm_submit($form, $form_state) {
     }
   }
   if ($types && content_access_mass_update(array_keys($types))) {
-    drupal_set_message(format_plural(count($types),
+    backdrop_set_message(format_plural(count($types),
       'Permissions have been successfully rebuilt for the content type @types.',
       'Permissions have been successfully rebuilt for the content types @types.',
       array('@types' => implode(', ', $types))

@@ -6,12 +6,29 @@
  */
 
 /**
- * Implements hook_uninstall().
+ * Implements hook_install().
  */
-function content_access_uninstall() {
-  foreach (node_type_get_types() as $type_name => $type) {
-    variable_del('content_access_' . $type_name);
+function content_access_install() {
+  $node_types = node_type_get_types();
+  $config = config('content_access.settings');
+  foreach ($node_types as $type) {
+    $config->set('content_access_' . $type->type, array());
   }
+  $config->save();
+}
+
+/**
+ * Implements hook_install().
+ */
+function content_access_update_1000() {
+  $config = config('content_access.settings');
+  $config->set('content_access_article', update_variable_get('content_access_article'));
+  $config->set('content_access_page', update_variable_get('content_access_page'));
+  $config->save();
+
+  // Delete variables.
+  update_variable_del('content_access_article');
+  update_variable_del('content_access_page');
 }
 
 /**
@@ -35,20 +52,4 @@ function content_access_schema() {
     'primary key' => array('nid')
   );
   return $schema;
-}
-
-/**
- * Convert content type settings to a new features-friendly storage format.
- */
-function content_access_update_7101() {
-  $settings = variable_get('content_access_settings', array());
-  foreach ($settings as $setting => $data) {
-    foreach ($data as $type_name => $value) {
-      $settings_new[$type_name][$setting] = $value;
-    }
-  }
-  foreach ($settings_new as $type_name => $data) {
-    variable_set('content_access_' . $type_name, $data);
-  }
-  variable_del('content_access_settings');
 }
