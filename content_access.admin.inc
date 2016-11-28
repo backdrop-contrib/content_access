@@ -155,7 +155,7 @@ function content_access_admin_settings($form, &$form_state, $content_type) {
     '#type' => 'fieldset',
     '#title' => t('Per content node access control settings'),
     '#collapsible' => TRUE,
-    '#description' => t('Optionally you can enable per content node access control settings. If enabled, a new tab for the content access settings appears when viewing content. You have to configure permission to access these settings at the !permissions page.', array('!permissions' => l(t('permissions'), 'admin/people/permissions'))),
+    '#description' => t('Optionally you can enable per content node access control settings. If enabled, a new tab for the content access settings appears when viewing content. You have to configure permission to access these settings at the !permissions page.', array('!permissions' => l(t('permissions'), 'admin/config/people/permissions'))),
   );
   $form['node']['per_node'] = array(
     '#type' => 'checkbox',
