@@ -52,7 +52,7 @@ function content_access_page($form, &$form_state, $node) {
     '#value' => t('Reset to defaults'),
     '#weight' => 10,
     '#submit' => array('content_access_page_reset'),
-    '#access' => count(content_access_get_per_node_settings($node)) > 0,
+    '#access' => !empty(content_access_get_per_node_settings($node)),
   );
   $form['submit'] = array(
     '#type' => 'submit',
