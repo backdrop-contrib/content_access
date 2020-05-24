@@ -106,7 +106,7 @@ function content_access_page_reset($form, &$form_state) {
   content_access_delete_per_node_settings($form_state['node']);
   node_access_acquire_grants($form_state['node']);
 
-  drupal_set_message(t('The permissions have been reseted to the content type defaults.'));
+  drupal_set_message(t('The permissions have been reset to the content type defaults.'));
 }
 
 /**
