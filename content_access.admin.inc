@@ -272,8 +272,8 @@ function content_access_role_based_form(&$form, $defaults = array(), $type = NUL
     '#type' => 'fieldset',
     '#title' => t('Role based access control settings'),
     '#collapsible' => TRUE,
-    '#description' => t('Note that users need at least the %access_content permission to be able to deal in any way with content.', array('%access_content' => t('access content'))) .
-      ' ' . t('Furthermore note that content which is not @published is treated in a different way by drupal: It can be viewed only by its author or users with the %administer_nodes permission.', array('@published' => t('published'), '%administer_nodes' => t('administer nodes'))),
+    '#description' => t('Note that users need at least the permission “%viewpublished”  to be able to access published  content.', array('%viewpublished' => t('View published content'))) .
+      ' ' . t('Furthermore note that content which is not @published is treated in a different way by Drupal: It can be viewed only by its author or users with the “%bypass” permission.', array('@published' => t('published'), '%bypass' => t('Bypass content access control'))),
   );
 
   $operations = _content_access_get_operations($type);

@@ -11,16 +11,25 @@ function content_access_help($path, $arg) {
   switch ($path) {
     case 'admin/help#content_access':
       $output = '<h3>' . t('About') . '</h3>';
-      $output .= '<p>' . t('Content Access module provides flexible way to control how and who should read or control your site content. Content Access can define custom access control rules for content types and even for every piece of content.') . '</p>';
-      $output .= '<h3>' . t('Uses') . '</h3>';
-      $output .= '<dl>';
-      $output .= '<dt>' . t('Default and custom settings') . '</dt>';
-      $output .= '<dd>' . t("Each <a href='@content-type'>content type</a> can have its own default content access settings configured as: <em>View any content</em> to allow anyone to view content from this content type, <em>View own content</em> to allow only content creators to see their own content, <em>Edit any content</em> to allow anyone to edit content from this content type, <em>Edit own content</em> to allow only content creators to edit their own content, <em>Delete any content</em> to allow anyone to delete content from this content type, <em>Delete own content </em> to allow content creators to delete their own content. This default settings for each content type can be further customized per every piece of content per user if you have <a href='@acl'>ACL</a> module enabled.", array('@content-type' => url('admin/structure/types'), '@acl' => 'http://drupal.org/project/acl/')) . '</dd>';
-      $output .= '</dl>';
+      $output .= '<p>' . t('The <strong>Content Access</strong> module let you content manage access permission in a flexible and transparant way.') . '</p>';
+      $output .= '<h3>' . t('Use') . '</h3>';
+      $output .= '<p>' . t('It provides two new permissions: <em>view all</em> (allows anyone to view the content) and <em>view own</em> (allows  only the content creator to see his/her own content). It also gives access to the existing core permissions <em>edit</em> and <em>delete</em> on the same settings page.') . '</p>';
+      $output .= '<p>' . t('It provides the following modalities:') . '</p><ul>';
+      $output .= '<li>' . t('Each <em>!content-type</em> can have its own default content access settings by role.',  array('!content-type' => l('content type', 'admin/structure/types'))) . '</li>';
+      $output .= '<li>' . t('Optionally you can enable  role based access control settings per <em>content node</em>.') . '</li>';
+      $output .= '<li>' . t('Access control can be further customized per <em>user</em> if you have the <strong>!acl</strong> module enabled.',
+        array('!acl' => l('ACL', 'https://www.drupal.org/project/acl/'))) . '</li></ul>';
+      if (function_exists('xadvanced_help_hint_docs')) {
+        $output .= '<p>' . advanced_help_hint_docs('content_access', 'https://drupal.org/node/1194974', TRUE) . '</p>';
+      }
+      else {
+        $output .= '<p>' .t('If you install and enable the module <strong>!url</strong>, you will get more help for <strong>Content Access</strong>.',
+          array('!url' => l('Advanced Help Hint', 'https://www.drupal.org/project/advanced_help_hint'))) . '</p>';
+      }
       return $output;
   }
 }
-
+          
 /**
  * Implements hook_admin_paths().
  */
