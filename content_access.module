@@ -338,7 +338,7 @@ function content_access_proccess_grant($grant, $gid, $node) {
  * @param $any_roles
  *   The roles with which anybody has access (not optimized!)
  * @param $own_roles
- *   The roles with which only the author has acess (optimized!)
+ *   The roles with which only the author has access (optimized!)
  */
 function content_access_own_op($node, $any_roles, $own_roles) {
   static $roles = array();
