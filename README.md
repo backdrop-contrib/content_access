@@ -6,6 +6,7 @@
 * Installation
 * Configuration
 * Maintainers
+* Notes
 
 
 # INTRODUCTION
@@ -114,7 +115,7 @@ To install and enable, do the following:
 
 Note that users need at least the permission "View published content"
 to be able to access published content. Furthermore note that content
-which is not published is treated in a different way by drupal: It can
+which is not published is treated in a different way by Drupal: It can
 be viewed only by its author or users with "Bypass content access
 control" permission.
 
