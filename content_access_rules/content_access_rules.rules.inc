@@ -390,7 +390,7 @@ function content_access_action_aquire_grants($node) {
   // node_save() does implement node_access_acquire_grants() so we don't want
   // to execute it again or we'll get a duplicated key exception
   if (!isset($node->op) ||
-      (isset($node->op) && $node->op != 'Save')) {
+      (isset($node->op) && $node->op != t('Save'))) {
     node_access_acquire_grants($node);
   }
 }
