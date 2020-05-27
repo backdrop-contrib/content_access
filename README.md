@@ -45,8 +45,7 @@ Features:
   settings per content node.
 * It comes with a submodule named **Content Access Rules
   Interations**. It provides conditions and actions for the **Rules**
-  module, which allows one to configure rule-based access permissions
-  ([see Note 2](#rul) at the end).
+  module, which allows one to configure rule-based access permissions.
 * It optimizes the written content node grants, so that only the
   necessary grants are written.  This is important for the
   performance of your site.
@@ -55,7 +54,7 @@ Features:
 * It respects and makes use of Drupal's core permissions. This means
   that the "Access Control" tab provided by this module takes them
   into account and provides you a good overview of *all* applied
-  access control settings on a single page (but see [Note 3](#adv) at
+  access control settings on a single page (but see [Note 2](#adv) at
   the end).
 
 The module is designed to be simple to use, but can be configured to
@@ -117,7 +116,8 @@ Note that users need at least the permission "View published content"
 to be able to access published content. Furthermore note that content
 which is not published is treated in a different way by Drupal: It can
 be viewed only by its author or users with "Bypass content access
-control" permission.
+control" permission.  You can *not* use this project to manage
+access to unpublished content.
 
 To inspect and change those permissions, navigate to *Administration »
 People » Permisions* and scroll down to the "Node" section.
@@ -187,11 +187,7 @@ Any help with development (patches, reviews, comments) are welcome.
 
 **Note 1**<a id="ACL"></a>: ACL integration is not yet working right.
 
-**Note 2**<a id="rul"></a>: There is currently no documentation about
-how to use **Rules** integration.  If you can help please visit
-[this issue][14] in the project's issue queue.
-
-**Note 3**<a id="adv"></a>: Note that this overview can't take other
+**Note 2**<a id="adv"></a>: Note that this overview can't take other
 modules into account, which might also alter node access.  If you have
 multiple modules installed that alter node access, read the paragraph
 about "Advanced access control".
@@ -210,4 +206,3 @@ about "Advanced access control".
 [11]: https://www.drupal.org/u/good_man
 [12]: https://www.drupal.org/u/gisle
 [13]: https://hannemyr.no
-[14]: https://www.drupal.org/project/content_access/issues/3142332

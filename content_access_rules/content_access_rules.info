@@ -4,4 +4,3 @@ package = Access control
 core = 7.x
 dependencies[] = content_access
 dependencies[] = rules
-files[] = content_access.rules.inc

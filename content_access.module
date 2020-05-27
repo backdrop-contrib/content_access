@@ -19,7 +19,7 @@ function content_access_help($path, $arg) {
       $output .= '<li>' . t('Optionally you can enable  role based access control settings per <em>content node</em>.') . '</li>';
       $output .= '<li>' . t('Access control can be further customized per <em>user</em> if you have the <strong>!acl</strong> module enabled.',
         array('!acl' => l('ACL', 'https://www.drupal.org/project/acl/'))) . '</li></ul>';
-      if (function_exists('xadvanced_help_hint_docs')) {
+      if (function_exists('advanced_help_hint_docs')) {
         $output .= '<p>' . advanced_help_hint_docs('content_access', 'https://drupal.org/node/1194974', TRUE) . '</p>';
       }
       else {
