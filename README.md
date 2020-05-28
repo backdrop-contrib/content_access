@@ -78,6 +78,8 @@ None.
 * [**Markdown**][8]:
   When this module is enabled, display of the project's `README.md`
   will be rendered with the markdown filter.
+* [**Node Export**][N]
+  To export content access rules.
 * [**Rules**][5]:
   To configure rule-based access permissions.
 
@@ -175,8 +177,8 @@ permission for specific users..
 
 # MAINTAINERS
 
-**Content Access** was created by [fago][10] (Wolfgang Ziegler).
-It contains a lot of contributions from  [good_man][11] (Khaled Al Hourani).
+**Content Access** was created by [fago][10] (Wolfgang Ziegler).  
+It contains a lot of contributions from  [good_man][11] (Khaled Al Hourani).  
 The current maintainer is [gisle][12] (Gisle Hannemyr).
 
 Development and maintenance is sponsored by [Hannemyr Nye Medier AS][13].
@@ -201,6 +203,7 @@ about "Advanced access control".
 [6]: https://www.drupal.org/project/advanced_help
 [7]: https://www.drupal.org/project/advanced_help_hint
 [8]: https://www.drupal.org/project/markdown
+[N]: https://www.drupal.org/project/node_export
 [9]: https://www.drupal.org/docs/7/extend/installing-modules
 [10]: https://www.drupal.org/u/fago
 [11]: https://www.drupal.org/u/good_man
