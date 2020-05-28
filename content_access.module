@@ -228,7 +228,7 @@ function content_access_get_settings($setting, $type_name) {
  * Save content_access settings of a content type.
  */
 function content_access_set_settings($settings, $type_name) {
-  // Do not store default values so we do not have to care about synching our
+  // Do not store default values so we do not have to care about syncing our
   // settings with the permissions.
   foreach (content_access_get_setting_defaults($type_name) as $setting => $default_value) {
     if (isset($settings[$setting]) && $settings[$setting] == $default_value) {
@@ -394,7 +394,7 @@ function content_access_get_rids_per_node_op($op, $node) {
  * @param $node
  *   The node object.
  * @param $settings
- *    Optional array used to update the settings cache with the given settings.
+ *   Optional array used to update the settings cache with the given settings.
  * @return
  *   An array of role ids which have access.
  */
