@@ -647,3 +647,25 @@ function _content_access_remove_acls($type) {
     acl_node_clear_acls($node->nid, 'content_access');
   }
 }
+
+/**
+ * Implements hook_node_export_alter().
+ */
+function content_access_node_export_alter(array $nodes) {
+  foreach ($nodes as $node) {
+    $node->content_access = content_access_get_per_node_settings($node);
+  }
+}
+
+/**
+ * Implements hook_node_export_after_import_alter().
+ */
+function content_access_node_export_after_import_alter(array $nodes) {
+  foreach ($nodes as $node) {
+    if(empty($node->nid))
+      continue;
+    content_access_save_per_node_settings($node, $node->content_access);
+  }
+  // Rebuild content access permissions
+  node_access_rebuild();
+}
