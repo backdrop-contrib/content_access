@@ -94,7 +94,7 @@ function content_access_page_submit($form, &$form_state) {
   // Apply new settings.
   node_access_acquire_grants($node);
   cache_clear_all();
-  module_invoke_all('per_node', $settings);
+  module_invoke_all('per_node', $settings, $node);
   drupal_set_message(t('Your changes have been saved.'));
 }
 

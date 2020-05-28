@@ -17,7 +17,12 @@
  */
 function content_access_rules_rules_event_info() {
   $events['content_access_content_type'] = array('label' => t('Content type access control was changed'));
-  $events['content_access_per_node'] = array('label' => t('Per node access control was changed'));
+  $events['content_access_per_node'] = array(
+    'label' => t('Per node access control was changed'),
+    'variables' => array(
+      'node' => array('type' => 'node', 'label' => 'Content with updated content access'),
+    ),
+  );
 
   if (module_exists('acl')) {
     $events['content_access_user_acl'] = array('label' => t('User was added to ACL'));
@@ -25,8 +30,7 @@ function content_access_rules_rules_event_info() {
 
   $items = array();
   foreach ($events as $name => $event) {
-    $items[$name] = array(
-      'label' => $event['label'],
+    $items[$name] = $event + array(
       'group' => t('Content Access'),
     );
   }
