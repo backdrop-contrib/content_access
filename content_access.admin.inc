@@ -95,7 +95,7 @@ function content_access_page_submit($form, &$form_state) {
   node_access_acquire_grants($node);
   cache_clear_all();
   module_invoke_all('per_node', $settings, $node);
-  drupal_set_message(t('Your changes have been saved.'));
+  drupal_set_message(t('Your changes have been saved. You may have to !rebuild for your changes to take effect.', array('!rebuild' => l(t('rebuild permissions'), 'admin/reports/status/rebuild'))));
 }
 
 /**
@@ -218,7 +218,7 @@ function content_access_admin_settings_submit($form, &$form_state) {
     }
   }
 
-  drupal_set_message(t('Your changes have been saved.'));
+  drupal_set_message(t('Your changes have been saved. You may have to !rebuild for your changes to take effect.', array('!rebuild' => l(t('rebuild permissions'), 'admin/reports/status/rebuild'))));
 }
 
 /**
