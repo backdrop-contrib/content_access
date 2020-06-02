@@ -50,7 +50,7 @@ Features:
   necessary grants are written.  This is important for the
   performance of your site.
 * The module has a comes with automated testing to ensure everything
-  istays working correctly.
+  stays working correctly.
 * It respects and makes use of Drupal's core permissions. This means
   that the "Access Control" tab provided by this module takes them
   into account and provides you a good overview of *all* applied

@@ -46,7 +46,7 @@ class ContentAccessTestCase extends DrupalWebTestCase {
     $this->rid = key($roles);
 
     // Create admin user
-    $this->admin_user = $this->drupalCreateUser(array('access content', 'administer content types', 'grant content access', 'grant own content access', 'administer nodes', 'access administration pages'));
+    $this->admin_user = $this->drupalCreateUser(array('access content', 'administer content types', 'grant content access', 'grant own content access', 'bypass node access', 'administer nodes', 'access administration pages'));
     $this->drupalLogin($this->admin_user);
 
     // Rebuild content access permissions

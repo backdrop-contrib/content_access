@@ -596,7 +596,7 @@ function _content_access_get_operations($type = NULL) {
  */
 function content_access_disable_checkboxes($element) {
   $access_roles = content_access_get_permission_access('access content');
-  $admin_roles = content_access_get_permission_access('administer nodes');
+  $admin_roles = content_access_get_permission_access('bypass node access');
 
   foreach (element_children($element) as $key) {
     if (!in_array($key, $access_roles) &&
@@ -609,10 +609,10 @@ function content_access_disable_checkboxes($element) {
     }
     elseif (in_array($key, $admin_roles) ||
             ($key != DRUPAL_ANONYMOUS_RID && in_array(DRUPAL_AUTHENTICATED_RID, $admin_roles))) {
-      // Fix the checkbox to be enabled for users with administer node privileges
+      // Fix the checkbox to be enabled for users with bypass node access privileges
       $element[$key]['#disabled'] = TRUE;
       $element[$key]['#default_value'] = TRUE;
-      $element[$key]['#prefix'] = '<span' . drupal_attributes(array('title' => t("This role has '@perm' permission, so access is granted.", array('@perm' => t('administer nodes'))))) . '>';
+      $element[$key]['#prefix'] = '<span' . drupal_attributes(array('title' => t("This role has '@perm' permission, so access is granted.", array('@perm' => t('bypass node access'))))) . '>';
       $element[$key]['#suffix'] = "</span>";
     }
   }
