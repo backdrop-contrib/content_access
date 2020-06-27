@@ -53,7 +53,6 @@ function content_access_menu() {
     'access callback' => 'content_access_node_page_access',
     'access arguments' => array(1),
     'file' => 'content_access.admin.inc',
-    'theme callback' => '_node_custom_theme',
     'type' => MENU_LOCAL_TASK,
     'weight' => 3,
     'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
@@ -68,7 +67,6 @@ function content_access_menu() {
     'access arguments' => array(),
     'type' => MENU_LOCAL_TASK,
     'file' => 'content_access.admin.inc',
-    'theme callback' => '_node_custom_theme',
     'weight' => 1,
   );
 
