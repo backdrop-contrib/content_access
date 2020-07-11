@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Automatd SimpleTest Case for using content access module with acl module
+ * Automated SimpleTest Case for using content access module with ACL module.
  */
 
 require_once(drupal_get_path('module', 'content_access') .'/tests/content_access_test_help.php');
