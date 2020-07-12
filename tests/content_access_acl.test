@@ -19,7 +19,7 @@ class ContentAccessACLTestCase extends ContentAccessTestCase {
       'name' => t('Content Access Module with ACL Module Tests'),
       'description' => t('Various tests to check the combination of content access and ACL module.'),
       'group' => 'Content Access',
-      'dependencies' => array('acl');
+      'dependencies' => array('acl'),
     );
   }
 
