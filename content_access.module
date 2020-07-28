@@ -233,7 +233,13 @@ function content_access_disabling($set = NULL) {
 function content_access_get_settings($setting, $type_name) {
   $settings = array();
   $settings = config_get('content_access.settings', 'content_access_' . $type_name);
-  $settings += content_access_get_setting_defaults($type_name);
+  $settings_default = content_access_get_setting_defaults($type_name);
+  if (!empty($settings)) {
+    $settings += $settings_default;
+  }
+  else {
+    $settings = $settings_default;
+  }
   if ($setting == 'all') {
     return $settings;
   }
