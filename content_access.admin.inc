@@ -9,13 +9,6 @@
  */
 define('CONTENT_ACCESS_MASS_UPDATE_THRESHOLD', 1000);
 
-
-
-
-
-
-
-
 /**
  * Per node settings page.
  */
@@ -59,7 +52,7 @@ function content_access_page($form, &$form_state, $node) {
     '#value' => t('Reset to defaults'),
     '#weight' => 10,
     '#submit' => array('content_access_page_reset'),
-    '#access' => count(content_access_get_per_node_settings($node)) > 0,
+    '#access' => !empty(content_access_get_per_node_settings($node)),
   );
   
   $form['actions']['#type'] = 'actions';
@@ -101,19 +94,10 @@ function content_access_page_submit($form, &$form_state) {
 
   // Apply new settings.
   node_access_acquire_grants($node);
-
-  module_invoke_all('per_node', $settings);
-
-  backdrop_set_message(t('Your changes have been saved.'));
+  cache_clear_all();
+  module_invoke_all('per_node', $settings, $node);
+  backdrop_set_message(t('Your changes have been saved. You may have to !rebuild for your changes to take effect.', array('!rebuild' => l(t('rebuild permissions'), 'admin/reports/status/rebuild'))));
 }
-
-
-
-
-
-
-
-
 
 /**
  * Submit callback for reset on content_access_page().
@@ -122,18 +106,8 @@ function content_access_page_reset($form, &$form_state) {
   content_access_delete_per_node_settings($form_state['node']);
   node_access_acquire_grants($form_state['node']);
 
-  backdrop_set_message(t('The permissions have been reseted to the content type defaults.'));
+  backdrop_set_message(t('The permissions have been reset to the content type defaults.'));
 }
-
-
-
-
-
-
-
-
-
-
 
 /**
  * Per content type settings form.
@@ -250,19 +224,8 @@ function content_access_admin_settings_submit($form, &$form_state) {
     }
   }
 
-  backdrop_set_message(t('Your changes have been saved.'));
+  backdrop_set_message(t('Your changes have been saved. You may have to !rebuild for your changes to take effect.', array('!rebuild' => l(t('rebuild permissions'), 'admin/reports/status/rebuild'))));
 }
-
-
-
-
-
-
-
-
-
-
-
 
 /**
  * Mass updates node access records for nodes of the given types.
@@ -303,12 +266,6 @@ function content_access_save_permissions($roles_permissions) {
   }
 }
 
-
-
-
-
-
-
 /**
  * Builds the role based permission form for the given defaults.
  *
@@ -321,7 +278,7 @@ function content_access_role_based_form(&$form, $defaults = array(), $type = NUL
     '#title' => t('Role based access control settings'),
     '#collapsible' => TRUE,
     '#description' => t('Note that users need at least the %access_content permission to be able to deal in any way with content.', array('%access_content' => t('access content'))) .
-      ' ' . t('Furthermore note that content which is not @published is treated in a different way by Backdrop: It can be viewed only by its author or users with the %administer_nodes permission.', array('@published' => t('published'), '%administer_nodes' => t('administer nodes'))),
+      ' ' . t('Furthermore note that content which is not @published is treated in a different way by Backdrop: it can be viewed only by its author or users with the %administer_nodes permission.', array('@published' => t('published'), '%administer_nodes' => t('administer nodes'))),
   );
 
   $operations = _content_access_get_operations($type);

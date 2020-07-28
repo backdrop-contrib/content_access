@@ -1,6 +1,5 @@
 name = Content Access
 description = Provides flexible content access control.
 package = Access control
-version = BACKDROP_VERSION
 backdrop = 1.x
 type = module

@@ -15,7 +15,7 @@ function content_access_config_info()
     );
     return $prefixes;
 }
-
+          
 /**
  * Implements hook_admin_paths().
  */
@@ -112,6 +112,7 @@ function content_access_admin_settings_access() {
  */
 function content_access_node_grants($account, $op) {
   return array(
+    'content_access_author_unpublished' => $account->uid && user_access('view own unpublished content', $account) ? array($account->uid) : array(),
     'content_access_author' => array($account->uid),
     'content_access_rid' => content_access_get_gid_from_role($account->roles, 'grants'),
   );
@@ -121,8 +122,22 @@ function content_access_node_grants($account, $op) {
  * Implements hook_node_access_records().
  */
 function content_access_node_access_records($node) {
-  if (content_access_disabling() || !$node->status) {
+  if (content_access_disabling()) {
     return;
+  }
+  if (!$node->status) {
+    $grants = array();
+    if ($node->uid) {
+      $grants[] = array(
+        'realm' => 'content_access_author_unpublished',
+        'gid' => $node->uid,
+        'grant_view' => 1,
+        'grant_update' => 0,
+        'grant_delete' => 0,
+        'priority' => 0,
+      );
+    }
+    return $grants;
   }
 
   // Apply per node settings if necessary.
@@ -229,7 +244,7 @@ function content_access_get_settings($setting, $type_name) {
  * Save content_access settings of a content type.
  */
 function content_access_set_settings($settings, $type_name) {
-  // Do not store default values so we do not have to care about synching our
+  // Do not store default values so we do not have to care about syncing our
   // settings with the permissions.
   foreach (content_access_get_setting_defaults($type_name) as $setting => $default_value) {
     if (isset($settings[$setting]) && $settings[$setting] == $default_value) {
@@ -369,7 +384,7 @@ function content_access_get_gid_from_role($role, $process) {
  * @param $any_roles
  *   The roles with which anybody has access (not optimized!)
  * @param $own_roles
- *   The roles with which only the author has acess (optimized!)
+ *   The roles with which only the author has access (optimized!)
  */
 function content_access_own_op($node, $any_roles, $own_roles) {
   static $roles = array();
@@ -426,7 +441,7 @@ function content_access_get_rids_per_node_op($op, $node) {
  * @param $node
  *   The node object.
  * @param $settings
- *    Optional array used to update the settings cache with the given settings.
+ *   Optional array used to update the settings cache with the given settings.
  * @return
  *   An array of role ids which have access.
  */
@@ -530,9 +545,16 @@ function content_access_optimize_grants(&$grants, $node) {
   // Detect if all are allowed to view
   $all = array(BACKDROP_ANONYMOUS_ROLE, BACKDROP_AUTHENTICATED_ROLE);
   if (count(array_diff($all, $rids['view'])) == 0) {
-    //grant view access to all instead of single roles
+    // Grant view access to all instead of single roles.
     $rids['view'] = array('all');
-    $grants['all'] = array('realm' => 'all', 'gid' => 0, 'grant_view' => 1, 'grant_update' => 0, 'grant_delete' => 0, 'priority' => content_access_get_settings('priority', $node->type));
+    $grants['all'] = array(
+      'realm' => 'all',
+      'gid' => 0,
+      'grant_view' => 1,
+      'grant_update' => 0,
+      'grant_delete' => 0,
+      'priority' => content_access_get_settings('priority', $node->type)
+    );
   }
 
   // If authenticated users are involved, remove unnecessary other roles.
@@ -632,7 +654,7 @@ function _content_access_get_operations($type = NULL) {
  */
 function content_access_disable_checkboxes($element) {
   $access_roles = content_access_get_permission_access('access content');
-  $admin_roles = content_access_get_permission_access('administer nodes');
+  $admin_roles = content_access_get_permission_access('bypass node access');
 
   foreach (element_children($element) as $key) {
     if (!in_array($key, $access_roles) &&
@@ -645,7 +667,7 @@ function content_access_disable_checkboxes($element) {
     }
     elseif (in_array($key, $admin_roles) ||
             ($key != BACKDROP_ANONYMOUS_ROLE && in_array(BACKDROP_AUTHENTICATED_ROLE, $admin_roles))) {
-      // Fix the checkbox to be enabled for users with administer node privileges
+      // Fix the checkbox to be enabled for users with administer node privileges.
       $element[$key]['#disabled'] = TRUE;
       $element[$key]['#default_value'] = TRUE;
       $element[$key]['#prefix'] = '<span' . backdrop_attributes(array('title' => t("This role has '@perm' permission, so access is granted.", array('@perm' => t('administer nodes'))))) . '>';

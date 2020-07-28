@@ -34,12 +34,12 @@ class ContentAccessTestCase extends BackdropWebTestCase {
       }
     }
 
-    // Create test user with seperate role
+    // Create test user with seperate role.
     $this->test_user = $this->backdropCreateUser(array('access content'));
 
-    // Get the value of the new role
-    // Needed in D7 because it's by default create two roles for new users
-    // one role is Authenticated and the second is new default one
+    // Get the value of the new role.
+    // Needed in D7 because it's by default create two roles for new users:
+    // one role is Authenticated and the second has the given permissions.
     // @see backdropCreateUser()
     foreach ($this->test_user->roles as $role) {
       if (!in_array($role, array(BACKDROP_AUTHENTICATED_ROLE))) {
@@ -48,7 +48,7 @@ class ContentAccessTestCase extends BackdropWebTestCase {
       }
     }
 
-    // Create admin user
+    // Create admin user.
     $this->admin_user = $this->backdropCreateUser(array('access content', 'administer content types', 'grant content access', 'grant own content access', 'administer nodes', 'access administration pages'));
     $this->backdropLogin($this->admin_user);
 

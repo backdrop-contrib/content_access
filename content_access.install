@@ -18,20 +18,6 @@ function content_access_install() {
 }
 
 /**
- * Implements hook_install().
- */
-function content_access_update_1000() {
-  $config = config('content_access.settings');
-  $config->set('content_access_article', update_variable_get('content_access_article'));
-  $config->set('content_access_page', update_variable_get('content_access_page'));
-  $config->save();
-
-  // Delete variables.
-  update_variable_del('content_access_article');
-  update_variable_del('content_access_page');
-}
-
-/**
  * Implements hook_schema().
  */
 function content_access_schema() {
@@ -52,4 +38,35 @@ function content_access_schema() {
     'primary key' => array('nid')
   );
   return $schema;
+}
+
+/**
+ * Implements hook_update_last_removed().
+ */
+function content_access_update_last_removed() {
+  return 7102;
+}
+
+/**
+ * Implements hook_update_N().
+ */
+function content_access_update_1000() {
+  $config = config('content_access.settings');
+  $config->set('content_access_article', update_variable_get('content_access_article'));
+  $config->set('content_access_page', update_variable_get('content_access_page'));
+  $config->save();
+
+  // Delete variables.
+  update_variable_del('content_access_article');
+  update_variable_del('content_access_page');
+}
+
+/**
+ * Implements hook_update_N().
+ *
+ * Enable notice to rebuild node access permissions since a new node access realm
+ * was added to respect the core "view own unpublished content" permission.
+ */
+function content_access_update_1001() {
+  node_access_needs_rebuild(TRUE);
 }

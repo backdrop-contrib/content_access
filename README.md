@@ -1,5 +1,4 @@
-Content Access
-==============
+# Content Access
 
 This module allows you to manage permissions for content types by role. It
 allows you to specifiy custom view, view own, edit, edit own, delete and delete
@@ -32,8 +31,7 @@ So the module is simple to use, but can be configured to provide really
 fine-grained permissions!
 
 
-Installation
-------------
+## Installation
 
  - Install this module using the official Backdrop CMS instructions at
    https://backdropcms.org/guide/modules.
@@ -44,8 +42,7 @@ Installation
  - Configure a content type under Administration > Structure > Content Types
    (admin/structure/types). There will be a new tab called "Access Control".
 
-
-###[ACL Module](https://backdropcms.org/project/acl)
+### [ACL Module](https://backdropcms.org/project/acl)
 
 To make use of `Access Control Lists` you'll need to enable per content node
 access control settings for a content type. At the access control tab of such a
@@ -53,7 +50,7 @@ content node you are able to grant view, edit or delete permission for specific
 users.
 
 
-###Running multiple node access modules on a site (Advanced!)
+### Running multiple node access modules on a site (Advanced!)
 
 A Backdrop node access module can only grant access to content nodes, but not
 deny it. So if you are using multiple node access modules, access will be
@@ -67,38 +64,35 @@ be applied.
 By default node access modules use priority 0.
 
 
-Documentation
--------------
+## Documentation
 
 Additional documentation is located in the Wiki:
 https://github.com/backdrop-contrib/content_access/wiki/Documentation.
 
-Issues
-------
+## Issues
 
 Bugs and Feature requests should be reported in the Issue Queue:
 https://github.com/backdrop-contrib/content_access/issues.
 
-Current Maintainers
--------------------
+## Current Maintainers
 
-- [Laryn](https://github.com/laryn)
+- [Laryn Kragt Bakker](https://github.com/laryn), [CEDC.org](https://CEDC.org)
+- Collaboration and co-maintainers welcome!
 
-Credits
--------
+## Credits
 
  - This module was ported to Backdrop CMS by [Biolithic](https://github.com/biolithic)
-and [Docwilmot](https://github.com/docwilmot).
- - This module is a fork of the Drupal version by [Wolfgang Ziegler](https://www.drupal.org/u/fago)
+   and [Docwilmot](https://github.com/docwilmot).
+ - This module is a fork of the Drupal version created by [Wolfgang Ziegler](https://www.drupal.org/u/fago),
+   which contains a lot of contributions from [Khaled Al Hourani](https://www.drupal.org/u/good_man).  
+   The current Drupal maintainer is [Gisle Hannemyr](https://www.drupal.org/u/gisle).
 
-License
--------
+## License
 
 This project is GPL v2 software.
 See the LICENSE.txt file in this directory for complete text.
 
-Footnotes
----------
+## Footnotes
 
 [1] Note that this overview can't take other modules into account, which might
 also alter node access. If you have multiple modules installed that alter node

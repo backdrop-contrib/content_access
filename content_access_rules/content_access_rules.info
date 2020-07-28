@@ -1,0 +1,6 @@
+name = Content Access Rules Integration
+description = Integrates Rules with Content Access. Allows to act on access events, conditions, and actions.
+package = Access control
+backdrop = 1.x
+dependencies[] = content_access
+dependencies[] = rules
