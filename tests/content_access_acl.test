@@ -5,11 +5,11 @@
  * Automated SimpleTest Case for using content access module with ACL module.
  */
 
-require_once(backdrop_get_path('module', 'content_access') .'/tests/content_access_test_help.php');
+require_once backdrop_get_path('module', 'content_access') . '/tests/content_access_test_help.php';
 
 class ContentAccessACLTestCase extends ContentAccessTestCase {
 
-  var $node;
+  public $node;
 
   /**
    * Implementation of get_info() for information
@@ -26,7 +26,7 @@ class ContentAccessACLTestCase extends ContentAccessTestCase {
   /**
    * Setup configuration before each test
    */
-  function setUp($addedmodules = array()) {
+  public function setUp($addedmodules = array()) {
     $modules = array('acl');
     $addedmodules = array_merge($modules, $addedmodules);
     parent::setUp($addedmodules);
@@ -43,7 +43,7 @@ class ContentAccessACLTestCase extends ContentAccessTestCase {
   /**
    * Test Viewing accessibility with permissions for single users
    */
-  function testViewAccess() {
+  public function testViewAccess() {
     // Exit test if ACL module could not be enabled
     if (!module_exists('acl')) {
       $this->pass('No ACL module present, skipping test');
@@ -63,17 +63,17 @@ class ContentAccessACLTestCase extends ContentAccessTestCase {
     $edit = array(
       'acl[view][add]' => $this->test_user->name,
     );
-    $this->backdropPost('node/'. $this->node->nid .'/access', $edit, t('Add User'));
+    $this->backdropPost('node/' . $this->node->nid . '/access', $edit, t('Add User'));
     $this->backdropPost(NULL, array(), t('Submit'));
 
     // Logout admin, try to access the node anonymously
     $this->backdropLogout();
-    $this->backdropGet('node/'. $this->node->nid);
+    $this->backdropGet('node/' . $this->node->nid);
     $this->assertText(t('Access denied'), 'node is not viewable');
 
     // Login test user, view access should be allowed now
     $this->backdropLogin($this->test_user);
-    $this->backdropGet('node/'. $this->node->nid);
+    $this->backdropGet('node/' . $this->node->nid);
     $this->assertNoText(t('Access denied'), 'node is viewable');
 
     // Login admin and disable per node access
@@ -82,19 +82,19 @@ class ContentAccessACLTestCase extends ContentAccessTestCase {
 
     // Logout admin, try to access the node anonymously
     $this->backdropLogout();
-    $this->backdropGet('node/'. $this->node->nid);
+    $this->backdropGet('node/' . $this->node->nid);
     $this->assertText(t('Access denied'), 'node is not viewable');
 
     // Login test user, view access should be denied now
     $this->backdropLogin($this->test_user);
-    $this->backdropGet('node/'. $this->node->nid);
+    $this->backdropGet('node/' . $this->node->nid);
     $this->assertText(t('Access denied'), 'node is not viewable');
   }
 
   /**
    * Test Editing accessibility with permissions for single users
    */
-  function testEditAccess() {
+  public function testEditAccess() {
     // Exit test if ACL module could not be enabled
     if (!module_exists('acl')) {
       $this->pass('No ACL module present, skipping test');
@@ -108,17 +108,17 @@ class ContentAccessACLTestCase extends ContentAccessTestCase {
     $edit = array(
       'acl[update][add]' => $this->test_user->name,
     );
-    $this->backdropPost('node/'. $this->node->nid .'/access', $edit, t('Add User'));
+    $this->backdropPost('node/' . $this->node->nid . '/access', $edit, t('Add User'));
     $this->backdropPost(NULL, array(), t('Submit'));
 
     // Logout admin, try to edit the node anonymously
     $this->backdropLogout();
-    $this->backdropGet('node/'. $this->node->nid .'/edit');
+    $this->backdropGet('node/' . $this->node->nid . '/edit');
     $this->assertText(t('Access denied'), 'node is not editable');
 
     // Login test user, edit access should be allowed now
     $this->backdropLogin($this->test_user);
-    $this->backdropGet('node/'. $this->node->nid .'/edit');
+    $this->backdropGet('node/' . $this->node->nid . '/edit');
     $this->assertNoText(t('Access denied'), 'node is editable');
 
     // Login admin and disable per node access
@@ -127,19 +127,19 @@ class ContentAccessACLTestCase extends ContentAccessTestCase {
 
     // Logout admin, try to edit the node anonymously
     $this->backdropLogout();
-    $this->backdropGet('node/'. $this->node->nid .'/edit');
+    $this->backdropGet('node/' . $this->node->nid . '/edit');
     $this->assertText(t('Access denied'), 'node is not editable');
 
     // Login test user, edit access should be denied now
     $this->backdropLogin($this->test_user);
-    $this->backdropGet('node/'. $this->node->nid .'/edit');
+    $this->backdropGet('node/' . $this->node->nid . '/edit');
     $this->assertText(t('Access denied'), 'node is not editable');
   }
 
   /**
    * Test Deleting accessibility with permissions for single users
    */
-  function testDeleteAccess() {
+  public function testDeleteAccess() {
     // Exit test if ACL module could not be enabled
     if (!module_exists('acl')) {
       $this->pass('No ACL module present, skipping test');
@@ -153,17 +153,17 @@ class ContentAccessACLTestCase extends ContentAccessTestCase {
     $edit = array(
       'acl[delete][add]' => $this->test_user->name,
     );
-    $this->backdropPost('node/'. $this->node->nid .'/access', $edit, t('Add User'));
+    $this->backdropPost('node/' . $this->node->nid . '/access', $edit, t('Add User'));
     $this->backdropPost(NULL, array(), t('Submit'));
 
     // Logout admin, try to delete the node anonymously
     $this->backdropLogout();
-    $this->backdropGet('node/'. $this->node->nid .'/delete');
+    $this->backdropGet('node/' . $this->node->nid . '/delete');
     $this->assertText(t('Access denied'), 'node is not deletable');
 
     // Login test user, delete access should be allowed now
     $this->backdropLogin($this->test_user);
-    $this->backdropGet('node/'. $this->node->nid .'/delete');
+    $this->backdropGet('node/' . $this->node->nid . '/delete');
     $this->assertNoText(t('Access denied'), 'node is deletable');
 
     // Login admin and disable per node access
@@ -172,12 +172,13 @@ class ContentAccessACLTestCase extends ContentAccessTestCase {
 
     // Logout admin, try to delete the node anonymously
     $this->backdropLogout();
-    $this->backdropGet('node/'. $this->node->nid .'/delete');
+    $this->backdropGet('node/' . $this->node->nid . '/delete');
     $this->assertText(t('Access denied'), 'node is not deletable');
 
     // Login test user, delete access should be denied now
     $this->backdropLogin($this->test_user);
-    $this->backdropGet('node/'. $this->node->nid .'/delete');
+    $this->backdropGet('node/' . $this->node->nid . '/delete');
     $this->assertText(t('Access denied'), 'node is not deletable');
   }
+
 }

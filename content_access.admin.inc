@@ -54,7 +54,7 @@ function content_access_page($form, &$form_state, $node) {
     '#submit' => array('content_access_page_reset'),
     '#access' => !empty(content_access_get_per_node_settings($node)),
   );
-  
+
   $form['actions']['#type'] = 'actions';
   $form['actions']['submit'] = array(
     '#type' => 'submit',
@@ -231,7 +231,7 @@ function content_access_admin_settings_submit($form, &$form_state) {
  * Mass updates node access records for nodes of the given types.
  * @param $types
  *   An array of content type names.
- * @return
+ * @return bool
  *   Whether the operation has been processed successfully (TRUE) or postponed (FALSE).
  */
 function content_access_mass_update($types) {
@@ -278,7 +278,7 @@ function content_access_role_based_form(&$form, $defaults = array(), $type = NUL
     '#title' => t('Role based access control settings'),
     '#collapsible' => TRUE,
     '#description' => t('Note that users need at least the %access_content permission to be able to deal in any way with content.', array('%access_content' => t('access content'))) .
-      ' ' . t('Furthermore note that content which is not @published is treated in a different way by Backdrop: it can be viewed only by its author or users with the %administer_nodes permission.', array('@published' => t('published'), '%administer_nodes' => t('administer nodes'))),
+    ' ' . t('Furthermore note that content which is not @published is treated in a different way by Backdrop: it can be viewed only by its author or users with the %administer_nodes permission.', array('@published' => t('published'), '%administer_nodes' => t('administer nodes'))),
   );
 
   $operations = _content_access_get_operations($type);
@@ -287,7 +287,8 @@ function content_access_role_based_form(&$form, $defaults = array(), $type = NUL
     // Make sure defaults are set properly
     $defaults += array($op => array());
 
-    $form['per_role'][$op] = array('#type' => 'checkboxes',
+    $form['per_role'][$op] = array(
+      '#type' => 'checkboxes',
       '#prefix' => '<div class="content_access-div">',
       '#suffix' => '</div>',
       '#options' => $roles,

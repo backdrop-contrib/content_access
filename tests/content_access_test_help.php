@@ -7,19 +7,19 @@
 
 class ContentAccessTestCase extends BackdropWebTestCase {
 
-  var $test_user;
-  var $rid;
-  var $admin_user;
-  var $content_type;
-  var $url_content_type_name;
-  var $node1;
-  var $node2;
+  public $test_user;
+  public $rid;
+  public $admin_user;
+  public $content_type;
+  public $url_content_type_name;
+  public $node1;
+  public $node2;
 
   /**
    * Preparation work that is done before each test.
    * Test users, content types, nodes etc. are created.
    */
-  function setUp($module = '') {
+  public function setUp($module = '') {
     if (empty($module)) {
       // Enable content access module
       parent::setUp('content_access');
@@ -62,8 +62,8 @@ class ContentAccessTestCase extends BackdropWebTestCase {
   /**
    * Change access permissions for a content type
    */
-  function changeAccessContentType($access_settings) {
-    $this->backdropPost('admin/structure/types/manage/'. $this->content_type->type .'/access', $access_settings, t('Submit'));
+  public function changeAccessContentType($access_settings) {
+    $this->backdropPost('admin/structure/types/manage/' . $this->content_type->type . '/access', $access_settings, t('Submit'));
     $this->assertText(t('Your changes have been saved.'), 'access rules of content type were updated successfully');
   }
 
@@ -71,11 +71,12 @@ class ContentAccessTestCase extends BackdropWebTestCase {
    * Change access permissions for a content type by a given keyword (view, update or delete)
    * for the role of the user
    */
-  function changeAccessContentTypeKeyword($keyword, $access = TRUE, $user = NULL) {
+  public function changeAccessContentTypeKeyword($keyword, $access = TRUE, $user = NULL) {
     if ($user === NULL) {
       $user = $this->test_user;
       $roles[$this->rid] = $this->rid;
-    } else {
+    }
+    else {
       foreach ($user->roles as $role) {
         if (!in_array($role, array(BACKDROP_AUTHENTICATED_ROLE))) {
           $roles[$role] = $role;
@@ -85,7 +86,7 @@ class ContentAccessTestCase extends BackdropWebTestCase {
     }
 
     $access_settings = array(
-      $keyword .'['. key($roles) .']' => $access,
+      $keyword . '[' . key($roles) . ']' => $access,
     );
 
     $this->changeAccessContentType($access_settings);
@@ -94,7 +95,7 @@ class ContentAccessTestCase extends BackdropWebTestCase {
   /**
    * Change the per node access setting for a content type
    */
-  function changeAccessPerNode($access = TRUE) {
+  public function changeAccessPerNode($access = TRUE) {
     $access_permissions = array(
       'per_node' => $access,
     );
@@ -104,12 +105,12 @@ class ContentAccessTestCase extends BackdropWebTestCase {
   /**
    * Change access permissions for a node by a given keyword (view, update or delete)
    */
-  function changeAccessNodeKeyword($node, $keyword, $access = TRUE) {
+  public function changeAccessNodeKeyword($node, $keyword, $access = TRUE) {
     $user = $this->test_user;
     $roles[$this->rid] = $this->rid;
 
     $access_settings = array(
-      $keyword .'['. key($roles) .']' => $access,
+      $keyword . '[' . key($roles) . ']' => $access,
     );
 
     $this->changeAccessNode($node, $access_settings);
@@ -118,8 +119,9 @@ class ContentAccessTestCase extends BackdropWebTestCase {
   /**
    * Change access permission for a node
    */
-  function changeAccessNode($node, $access_settings) {
-    $this->backdropPost('node/'. $node->nid .'/access', $access_settings, t('Save configuration'));
+  public function changeAccessNode($node, $access_settings) {
+    $this->backdropPost('node/' . $node->nid . '/access', $access_settings, t('Save configuration'));
     $this->assertText(t('Your changes have been saved.'), 'access rules of node were updated successfully');
   }
+
 }

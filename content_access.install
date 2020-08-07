@@ -18,6 +18,13 @@ function content_access_install() {
 }
 
 /**
+ * Implements hook_disable().
+ */
+function content_access_disable() {
+  content_access_disabling(TRUE);
+}
+
+/**
  * Implements hook_schema().
  */
 function content_access_schema() {
@@ -27,15 +34,15 @@ function content_access_schema() {
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'default' => 0
+        'default' => 0,
       ),
       'settings' => array(
         'type' => 'text',
         'not null' => FALSE,
-        'size' => 'medium'
+        'size' => 'medium',
       ),
     ),
-    'primary key' => array('nid')
+    'primary key' => array('nid'),
   );
   return $schema;
 }

@@ -39,7 +39,7 @@ function content_access_rules_rules_event_info() {
 }
 
 /**
- * Implementation of hook_rules_action_info().
+ * Implements hook_rules_action_info().
  *
  * @ingroup rules
  */
@@ -173,7 +173,7 @@ function content_access_action_roles_permissions_list() {
 function content_access_rules_action_form_alter(&$form, &$form_state) {
   // Per node access control should be enabled for this type of action to be
   // effective.
-  backdrop_set_message(t('Access control settings will not be executed for the affected node unless you enabled \'%per_node\' from the Access Control tab on content type page of the node', array('%per_node' => 'Per content node access control settings')), 'warning');
+  backdrop_set_message(t("Access control settings will not be executed for the affected node unless you enabled '%per_node' from the Access Control tab on content type page of the node", array('%per_node' => 'Per content node access control settings')), 'warning');
 
   // Alter the text<list> to make it into checkboxes groups
   $elements =& $form['parameter']['permissions']['settings']['permissions'];

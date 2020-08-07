@@ -96,4 +96,5 @@ See the LICENSE.txt file in this directory for complete text.
 
 [1] Note that this overview can't take other modules into account, which might
 also alter node access. If you have multiple modules installed that alter node
-access, read the paragraph about "Running multiple node access modules on a site".
+access, read the paragraph about "Running multiple node access modules on a
+site".

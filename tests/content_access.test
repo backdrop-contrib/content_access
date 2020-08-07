@@ -5,7 +5,7 @@
  * Automated SimpleTest Case for content access module.
  */
 
-require_once(backdrop_get_path('module', 'content_access') .'/tests/content_access_test_help.php');
+require_once backdrop_get_path('module', 'content_access') . '/tests/content_access_test_help.php';
 
 class ContentAccessModuleTestCase extends ContentAccessTestCase {
 
@@ -20,7 +20,7 @@ class ContentAccessModuleTestCase extends ContentAccessTestCase {
     );
   }
 
-  function setUp($module = '') {
+  public function setUp($module = '') {
     parent::setUp();
 
     // Create test nodes.
@@ -31,7 +31,7 @@ class ContentAccessModuleTestCase extends ContentAccessTestCase {
   /**
    * Test for viewing nodes.
    */
-  function testViewAccess() {
+  public function testViewAccess() {
     // Restrict access to the content type (access is only allowed for the
     // author).
     $access_permissions = array(
@@ -42,12 +42,12 @@ class ContentAccessModuleTestCase extends ContentAccessTestCase {
 
     // Logout admin and try to access the node anonymously.
     $this->backdropLogout();
-    $this->backdropGet('node/'. $this->node1->nid);
+    $this->backdropGet('node/' . $this->node1->nid);
     $this->assertText(t('Access denied'), 'node is not viewable');
 
     // Login test user, view node, access must be denied.
     $this->backdropLogin($this->test_user);
-    $this->backdropGet('node/'. $this->node1->nid);
+    $this->backdropGet('node/' . $this->node1->nid);
     $this->assertText(t('Access denied'), 'node is not viewable');
 
     // Login admin and grant access for viewing to the test user.
@@ -57,12 +57,12 @@ class ContentAccessModuleTestCase extends ContentAccessTestCase {
     // Logout admin and try to access the node anonymously,
     // access must be denied again.
     $this->backdropLogout();
-    $this->backdropGet('node/'. $this->node1->nid);
+    $this->backdropGet('node/' . $this->node1->nid);
     $this->assertText(t('Access denied'), 'node is not viewable');
 
     // Login test user, view node, access must be granted.
     $this->backdropLogin($this->test_user);
-    $this->backdropGet('node/'. $this->node1->nid);
+    $this->backdropGet('node/' . $this->node1->nid);
     $this->assertNoText(t('Access denied'), 'node is viewable');
 
     // Login admin and enable per node access
@@ -74,18 +74,18 @@ class ContentAccessModuleTestCase extends ContentAccessTestCase {
 
     // Logout admin and try to access both nodes anonymously.
     $this->backdropLogout();
-    $this->backdropGet('node/'. $this->node1->nid);
+    $this->backdropGet('node/' . $this->node1->nid);
     $this->assertText(t('Access denied'), 'node1 is not viewable');
-    $this->backdropGet('node/'. $this->node2->nid);
+    $this->backdropGet('node/' . $this->node2->nid);
     $this->assertText(t('Access denied'), 'node2 is not viewable');
 
     // Login test user, view node1, access must be granted.
     $this->backdropLogin($this->test_user);
-    $this->backdropGet('node/'. $this->node1->nid);
+    $this->backdropGet('node/' . $this->node1->nid);
     $this->assertNoText(t('Access denied'), 'node1 is viewable');
 
     // View node2, access must be denied.
-    $this->backdropGet('node/'. $this->node2->nid);
+    $this->backdropGet('node/' . $this->node2->nid);
     $this->assertText(t('Access denied'), 'node2 is not viewable');
 
     // Login admin, swap permissions between content type and node2.
@@ -99,33 +99,33 @@ class ContentAccessModuleTestCase extends ContentAccessTestCase {
 
     // Logout admin and try to access both nodes anonymously.
     $this->backdropLogout();
-    $this->backdropGet('node/'. $this->node1->nid);
+    $this->backdropGet('node/' . $this->node1->nid);
     $this->assertText(t('Access denied'), 'node1 is not viewable');
-    $this->backdropGet('node/'. $this->node2->nid);
+    $this->backdropGet('node/' . $this->node2->nid);
     $this->assertText(t('Access denied'), 'node2 is not viewable');
 
     // Login test user, view node1, access must be denied.
     $this->backdropLogin($this->test_user);
-    $this->backdropGet('node/'. $this->node1->nid);
+    $this->backdropGet('node/' . $this->node1->nid);
     $this->assertText(t('Access denied'), 'node1 is not viewable');
 
     // View node2, access must be granted.
-    $this->backdropGet('node/'. $this->node2->nid);
+    $this->backdropGet('node/' . $this->node2->nid);
     $this->assertNoText(t('Access denied'), 'node2 is viewable');
   }
 
   /**
    * Test for editing nodes.
    */
-  function testEditAccess() {
+  public function testEditAccess() {
     // Logout admin and try to edit the node anonymously.
     $this->backdropLogout();
-    $this->backdropGet('node/'. $this->node1->nid .'/edit');
+    $this->backdropGet('node/' . $this->node1->nid . '/edit');
     $this->assertText(t('Access denied'), 'edit access denied for anonymous');
 
     // Login test user, edit node, access must be denied.
     $this->backdropLogin($this->test_user);
-    $this->backdropGet('node/'. $this->node1->nid .'/edit');
+    $this->backdropGet('node/' . $this->node1->nid . '/edit');
     $this->assertText(t('Access denied'), 'edit access denied for test user');
 
     // Login admin and grant access for editing to the test user.
@@ -135,12 +135,12 @@ class ContentAccessModuleTestCase extends ContentAccessTestCase {
     // Logout admin and try to edit the node anonymously,
     // access must be denied again.
     $this->backdropLogout();
-    $this->backdropGet('node/'. $this->node1->nid .'/edit');
+    $this->backdropGet('node/' . $this->node1->nid . '/edit');
     $this->assertText(t('Access denied'), 'edit access denied for anonymous');
 
     // Login test user, edit node, access must be granted.
     $this->backdropLogin($this->test_user);
-    $this->backdropGet('node/'. $this->node1->nid .'/edit');
+    $this->backdropGet('node/' . $this->node1->nid . '/edit');
     $this->assertNoText(t('Access denied'), 'node1 is editable');
 
     // Login admin and enable per node access.
@@ -155,18 +155,18 @@ class ContentAccessModuleTestCase extends ContentAccessTestCase {
 
     // Logout admin and try to edit both nodes anonymously.
     $this->backdropLogout();
-    $this->backdropGet('node/'. $this->node1->nid .'/edit');
+    $this->backdropGet('node/' . $this->node1->nid . '/edit');
     $this->assertText(t('Access denied'), 'node1 is not editable');
-    $this->backdropGet('node/'. $this->node2->nid .'/edit');
+    $this->backdropGet('node/' . $this->node2->nid . '/edit');
     $this->assertText(t('Access denied'), 'node2 is not editable');
 
     // Login test user, edit node1, access must be granted.
     $this->backdropLogin($this->test_user);
-    $this->backdropGet('node/'. $this->node1->nid .'/edit');
+    $this->backdropGet('node/' . $this->node1->nid . '/edit');
     $this->assertNoText(t('Access denied'), 'node1 is editable');
 
     // Edit node2, access must be denied.
-    $this->backdropGet('node/'. $this->node2->nid .'/edit');
+    $this->backdropGet('node/' . $this->node2->nid . '/edit');
     $this->assertText(t('Access denied'), 'node2 is not editable');
 
     // Login admin, swap permissions between node1 and node2.
@@ -179,33 +179,33 @@ class ContentAccessModuleTestCase extends ContentAccessTestCase {
 
     // Logout admin and try to edit both nodes anonymously.
     $this->backdropLogout();
-    $this->backdropGet('node/'. $this->node1->nid .'/edit');
+    $this->backdropGet('node/' . $this->node1->nid . '/edit');
     $this->assertText(t('Access denied'), 'node1 is not editable');
-    $this->backdropGet('node/'. $this->node2->nid .'/edit');
+    $this->backdropGet('node/' . $this->node2->nid . '/edit');
     $this->assertText(t('Access denied'), 'node2 is not editable');
 
     // Login test user, edit node1, access must be denied.
     $this->backdropLogin($this->test_user);
-    $this->backdropGet('node/'. $this->node1->nid .'/edit');
+    $this->backdropGet('node/' . $this->node1->nid . '/edit');
     $this->assertText(t('Access denied'), 'node1 is not editable');
 
     // Edit node2, access must be granted.
-    $this->backdropGet('node/'. $this->node2->nid .'/edit');
+    $this->backdropGet('node/' . $this->node2->nid . '/edit');
     $this->assertNoText(t('Access denied'), 'node2 is editable');
   }
 
   /**
    * Test for deleting nodes.
    */
-  function testDeleteAccess() {
+  public function testDeleteAccess() {
     // Logout admin and try to delete the node anonymously.
     $this->backdropLogout();
-    $this->backdropGet('node/'. $this->node1->nid .'/delete');
+    $this->backdropGet('node/' . $this->node1->nid . '/delete');
     $this->assertText(t('Access denied'), 'delete access denied for anonymous');
 
     // Login test user, delete node, access must be denied.
     $this->backdropLogin($this->test_user);
-    $this->backdropGet('node/'. $this->node1->nid .'/delete');
+    $this->backdropGet('node/' . $this->node1->nid . '/delete');
     $this->assertText(t('Access denied'), 'delete access denied for test user');
 
     // Login admin and grant access for deleting to the test user.
@@ -216,12 +216,12 @@ class ContentAccessModuleTestCase extends ContentAccessTestCase {
     // Logout admin and try to edit the node anonymously,
     // access must be denied again.
     $this->backdropLogout();
-    $this->backdropGet('node/'. $this->node1->nid .'/delete');
+    $this->backdropGet('node/' . $this->node1->nid . '/delete');
     $this->assertText(t('Access denied'), 'delete access denied for anonymous');
 
     // Login test user, delete node, access must be granted.
     $this->backdropLogin($this->test_user);
-    $this->backdropPost('node/'. $this->node1->nid .'/delete', array(), 'Delete');
+    $this->backdropPost('node/' . $this->node1->nid . '/delete', array(), 'Delete');
     $this->assertRaw(t('%node has been deleted', array('%node' => $this->node1->title)), 'Test node was deleted successfully by test user');
 
     // Login admin and recreate test node1.
@@ -239,18 +239,18 @@ class ContentAccessModuleTestCase extends ContentAccessTestCase {
 
     // Logout admin and try to delete both nodes anonymously.
     $this->backdropLogout();
-    $this->backdropGet('node/'. $this->node1->nid .'/delete');
+    $this->backdropGet('node/' . $this->node1->nid . '/delete');
     $this->assertText(t('Access denied'), 'node1 is not deletable');
-    $this->backdropGet('node/'. $this->node2->nid .'/delete');
+    $this->backdropGet('node/' . $this->node2->nid . '/delete');
     $this->assertText(t('Access denied'), 'node2 is not deletable');
 
     // Login test user, delete node1, access must be granted.
     $this->backdropLogin($this->test_user);
-    $this->backdropGet('node/'. $this->node1->nid .'/delete');
+    $this->backdropGet('node/' . $this->node1->nid . '/delete');
     $this->assertNoText(t('Access denied'), 'node1 is deletable');
 
     // Delete node2, access must be denied.
-    $this->backdropGet('node/'. $this->node2->nid .'/delete');
+    $this->backdropGet('node/' . $this->node2->nid . '/delete');
     $this->assertText(t('Access denied'), 'node2 is not deletable');
 
     // Login admin, swap permissions between node1 and node2.
@@ -263,25 +263,25 @@ class ContentAccessModuleTestCase extends ContentAccessTestCase {
 
     // Logout admin and try to delete both nodes anonymously.
     $this->backdropLogout();
-    $this->backdropGet('node/'. $this->node1->nid .'/delete');
+    $this->backdropGet('node/' . $this->node1->nid . '/delete');
     $this->assertText(t('Access denied'), 'node1 is not deletable');
-    $this->backdropGet('node/'. $this->node2->nid .'/delete');
+    $this->backdropGet('node/' . $this->node2->nid . '/delete');
     $this->assertText(t('Access denied'), 'node2 is not deletable');
 
     // Login test user, delete node1, access must be denied.
     $this->backdropLogin($this->test_user);
-    $this->backdropGet('node/'. $this->node1->nid .'/delete');
+    $this->backdropGet('node/' . $this->node1->nid . '/delete');
     $this->assertText(t('Access denied'), 'node1 is not deletable');
 
     // Delete node2, access must be granted.
-    $this->backdropGet('node/'. $this->node2->nid .'/delete');
+    $this->backdropGet('node/' . $this->node2->nid . '/delete');
     $this->assertNoText(t('Access denied'), 'node2 is deletable');
   }
 
   /**
    * Test own view access.
    */
-  function testOwnViewAccess() {
+  public function testOwnViewAccess() {
     // Setup 2 test users.
     $test_user1 = $this->test_user;
     $test_user2 = $this->backdropCreateUser(array('access content'));
@@ -307,27 +307,28 @@ class ContentAccessModuleTestCase extends ContentAccessTestCase {
 
     // Logout admin and try to access both nodes anonymously.
     $this->backdropLogout();
-    $this->backdropGet('node/'. $this->node1->nid);
+    $this->backdropGet('node/' . $this->node1->nid);
     $this->assertText(t('Access denied'), 'node1 is not viewable');
-    $this->backdropGet('node/'. $this->node2->nid);
+    $this->backdropGet('node/' . $this->node2->nid);
     $this->assertText(t('Access denied'), 'node2 is not viewable');
 
     // Login test user 1, view node1, access must be granted.
     $this->backdropLogin($test_user1);
-    $this->backdropGet('node/'. $this->node1->nid);
+    $this->backdropGet('node/' . $this->node1->nid);
     $this->assertNoText(t('Access denied'), 'node1 is viewable');
 
     // View node2, access must be denied.
-    $this->backdropGet('node/'. $this->node2->nid);
+    $this->backdropGet('node/' . $this->node2->nid);
     $this->assertText(t('Access denied'), 'node2 is not viewable');
 
     // Login test user 2, view node1, access must be denied.
     $this->backdropLogin($test_user2);
-    $this->backdropGet('node/'. $this->node1->nid);
+    $this->backdropGet('node/' . $this->node1->nid);
     $this->assertText(t('Access denied'), 'node1 is not viewable');
 
     // View node2, access must be granted.
-    $this->backdropGet('node/'. $this->node2->nid);
+    $this->backdropGet('node/' . $this->node2->nid);
     $this->assertNoText(t('Access denied'), 'node2 is viewable');
   }
+
 }
