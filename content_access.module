@@ -20,7 +20,7 @@ function content_access_help($path, $arg) {
       $output .= '<li>' . t('Access control can be further customized per <em>user</em> if you have the <strong>!acl</strong> module enabled.',
         array('!acl' => l('ACL', 'https://www.drupal.org/project/acl/'))) . '</li></ul>';
       if (function_exists('advanced_help_hint_docs')) {
-        $output .= '<p>' . advanced_help_hint_docs('content_access', 'https://drupal.org/node/1194974', TRUE) . '</p>';
+        $output .= '<p>' . advanced_help_hint_docs('content_access', 'https://www.drupal.org/docs/7/modules/content-access', TRUE) . '</p>';
       }
       else {
         $output .= '<p>' .t('If you install and enable the module <strong>!url</strong>, you will get more help for <strong>Content Access</strong>.',
