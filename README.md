@@ -30,11 +30,9 @@ In particular:
 So the module is simple to use, but can be configured to provide really
 fine-grained permissions!
 
-
 ## Installation
 
- - Install this module using the official Backdrop CMS instructions at
-   https://backdropcms.org/guide/modules.
+ - Install this module using the [official Backdrop CMS instructions](https://backdropcms.org/guide/modules).
 
  - Optionally download and install the
    [ACL module](https://backdropcms.org/project/acl) too.
@@ -42,13 +40,11 @@ fine-grained permissions!
  - Configure a content type under Administration > Structure > Content Types
    (admin/structure/types). There will be a new tab called "Access Control".
 
-### [ACL Module](https://backdropcms.org/project/acl)
-
-To make use of `Access Control Lists` you'll need to enable per content node
-access control settings for a content type. At the access control tab of such a
-content node you are able to grant view, edit or delete permission for specific
-users.
-
+ - [ACL Module](https://backdropcms.org/project/acl): To make use of 
+   `Access Control Lists` you'll need to enable per content node access
+   control settings for a content type. At the access control tab of such a
+   content node you are able to grant view, edit or delete permission for
+   specific users.
 
 ### Running multiple node access modules on a site (Advanced!)
 
@@ -63,16 +59,13 @@ be applied.
 
 By default node access modules use priority 0.
 
-
 ## Documentation
 
-Additional documentation is located in the Wiki:
-https://github.com/backdrop-contrib/content_access/wiki/Documentation.
+Additional documentation is located in the [Wiki](https://github.com/backdrop-contrib/content_access/wiki/Documentation).
 
 ## Issues
 
-Bugs and Feature requests should be reported in the Issue Queue:
-https://github.com/backdrop-contrib/content_access/issues.
+Bugs and Feature requests should be reported in the [Issue Queue](https://github.com/backdrop-contrib/content_access/issues).
 
 ## Current Maintainers
 
