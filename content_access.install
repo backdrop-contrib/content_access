@@ -51,7 +51,7 @@ function content_access_schema() {
  * Implements hook_update_last_removed().
  */
 function content_access_update_last_removed() {
-  return 7102;
+  return 7101;
 }
 
 /**
