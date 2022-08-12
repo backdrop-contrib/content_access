@@ -361,9 +361,10 @@ function content_access_get_gid_from_role($role, $process) {
   if ($process == 'grants') {
     $roles = array();
     foreach ($role as $rid) {
-      $roles[] = $gids[$rid];
+      if (!empty($gids[$rid])) {
+        $roles[] = $gids[$rid];
+      }
     }
-    // dpm($roles);
     return $roles;
   }
   elseif ($process == 'process') {
