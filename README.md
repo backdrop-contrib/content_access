@@ -40,7 +40,7 @@ fine-grained permissions!
  - Configure a content type under Administration > Structure > Content Types
    (admin/structure/types). There will be a new tab called "Access Control".
 
- - [ACL Module](https://backdropcms.org/project/acl): To make use of 
+ - [ACL Module](https://backdropcms.org/project/acl): To make use of
    `Access Control Lists` you'll need to enable per content node access
    control settings for a content type. At the access control tab of such a
    content node you are able to grant view, edit or delete permission for
@@ -69,15 +69,17 @@ Bugs and Feature requests should be reported in the [Issue Queue](https://github
 
 ## Current Maintainers
 
-- [Laryn Kragt Bakker](https://github.com/laryn), [CEDC.org](https://CEDC.org)
+- [Laryn Kragt Bakker](https://github.com/laryn)
 - Collaboration and co-maintainers welcome!
 
 ## Credits
 
  - This module was ported to Backdrop CMS by [Biolithic](https://github.com/biolithic)
    and [Docwilmot](https://github.com/docwilmot).
+ - Recent development has been sponsored by [Aten Design Group](https://atendesigngroup.com/).
+ - Previous development was sponsored in part by [CEDC.org](https://cedc.org).
  - This module is a fork of the Drupal version created by [Wolfgang Ziegler](https://www.drupal.org/u/fago),
-   which contains a lot of contributions from [Khaled Al Hourani](https://www.drupal.org/u/good_man).  
+   which contains a lot of contributions from [Khaled Al Hourani](https://www.drupal.org/u/good_man).
    The current Drupal maintainer is [Gisle Hannemyr](https://www.drupal.org/u/gisle).
 
 ## License
