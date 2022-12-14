@@ -77,3 +77,36 @@ function content_access_update_1000() {
 function content_access_update_1001() {
   node_access_needs_rebuild(TRUE);
 }
+
+/**
+ * Run role name update on per node permissions, if needed.
+ */
+function content_access_update_2000() {
+  $result = db_query('SELECT * FROM {content_access}');
+
+  foreach ($result as $per_node_setting) {
+    $changed = 0;
+    $setting_array = unserialize($per_node_setting->settings);
+    $nid = $per_node_setting->nid;
+    foreach ($setting_array as $access_permission => $access_settings) {
+      foreach ($access_settings as $key => $user_role) {
+        if ($user_role === 1) {
+          $setting_array[$access_permission][$key] = 'anonymous';
+          $changed = 1;
+        }
+        else if ($user_role == 2) {
+          $setting_array[$access_permission][$key] = 'authenticated';
+          $changed = 1;
+        }
+      }
+    }
+    if ($changed) {
+      db_update('content_access')
+        ->fields(array(
+          'settings' => serialize($setting_array),
+        ))
+        ->condition('nid', $nid, '=')
+        ->execute();
+    }
+  }
+}
