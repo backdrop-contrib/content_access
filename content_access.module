@@ -148,7 +148,7 @@ function content_access_node_access_records($node) {
       }
     }
     foreach ($grants as $rid => $grant) {
-      $grants[$rid] = content_access_proccess_grant($grant, $rid, $node);
+      $grants[$rid] = content_access_process_grant($grant, $rid, $node);
     }
 
     // Care for the author grant.
@@ -163,7 +163,7 @@ function content_access_node_access_records($node) {
 
     if (array_filter($grant)) {
       $grant['realm'] = 'content_access_author';
-      $grants[] = content_access_proccess_grant($grant, $node->uid, $node);
+      $grants[] = content_access_process_grant($grant, $node->uid, $node);
     }
   }
   else {
@@ -173,7 +173,7 @@ function content_access_node_access_records($node) {
 
   if (empty($grants)) {
     // This means we grant no access.
-    $grants[] = content_access_proccess_grant(array(), 0, $node);
+    $grants[] = content_access_process_grant(array(), 0, $node);
   }
   else {
     content_access_optimize_grants($grants, $node);
@@ -316,16 +316,16 @@ function content_access_get_permission_by_op($op, $type) {
  * Returns the default grants for a given node type.
  */
 function content_access_get_type_grant($node) {
-  // Cache per type default grants in a static array
+  // Cache per type default grants in a static array.
   static $defaults = array();
 
   if (!isset($defaults[$node->type])) {
     $grants = array();
 
-    // Only process the 'view' op as node_access() will take care of edit and delete
+    // Only process the 'view' op as node_access() will take care of edit and delete.
     foreach (content_access_get_settings('view', $node->type) as $rid) {
       $grants[$rid]['grant_view'] = 1;
-      $grants[$rid] = content_access_proccess_grant($grants[$rid], $rid, $node);
+      $grants[$rid] = content_access_process_grant($grants[$rid], $rid, $node);
     }
     $defaults[$node->type] = $grants;
   }
@@ -335,7 +335,7 @@ function content_access_get_type_grant($node) {
   $grant['grant_view'] = content_access_own_op($node, content_access_get_settings('view', $node->type), content_access_get_settings('view_own', $node->type));
   if ($grant['grant_view']) {
     $grant['realm'] = 'content_access_author';
-    $grants = array('author' => content_access_proccess_grant($grant, $node->uid, $node));
+    $grants = array('author' => content_access_process_grant($grant, $node->uid, $node));
   }
 
   return $defaults[$node->type] + $grants;
@@ -344,7 +344,7 @@ function content_access_get_type_grant($node) {
 /**
  * Process a grant, which means add priority, realm and other properties.
  */
-function content_access_proccess_grant($grant, $gid, $node) {
+function content_access_process_grant($grant, $gid, $node) {
   $grant += array('grant_view' => 0, 'grant_update' => 0, 'grant_delete' => 0, 'realm' => 'content_access_rid');
   $grant['gid'] = content_access_get_gid_from_role($gid, 'process');
   $grant['priority'] = content_access_get_settings('priority', $node->type);
@@ -450,7 +450,7 @@ function content_access_per_node_setting($op, $node, $settings = NULL) {
   static $grants = array();
 
   if (isset($settings)) {
-    // Update settings cache
+    // Update settings cache.
     $grants[$node->nid] = $settings;
     return;
   }
@@ -459,7 +459,7 @@ function content_access_per_node_setting($op, $node, $settings = NULL) {
     $grants[$node->nid] = content_access_get_per_node_settings($node);
   }
 
-  // Return the content type defaults if no per node settings are available
+  // Return the content type defaults if no per node settings are available.
   return isset($grants[$node->nid][$op]) ? $grants[$node->nid][$op] : content_access_get_settings($op, $node->type);
 }
 
@@ -500,7 +500,7 @@ function content_access_save_per_node_settings($node, $settings) {
       ->execute();
   }
 
-  // Make content_access_per_node_setting() use the new settings
+  // Make content_access_per_node_setting() use the new settings.
   content_access_per_node_setting(NULL, $node, $settings);
 }
 
@@ -515,7 +515,7 @@ function content_access_delete_per_node_settings($node) {
   // Clear the cache.
   content_access_per_node_setting(NULL, $node, FALSE);
 
-  // Delete possible acl settings
+  // Delete possible acl settings.
   if (module_exists('acl')) {
     // @todo why content_access.admin.inc is not loaded before?
     module_load_include('inc', 'content_access', 'content_access.admin');
@@ -543,7 +543,7 @@ function content_access_optimize_grants(&$grants, $node) {
     }
   }
 
-  // Detect if all are allowed to view
+  // Detect if all are allowed to view.
   $all = array(BACKDROP_ANONYMOUS_ROLE, BACKDROP_AUTHENTICATED_ROLE);
   if (count(array_diff($all, $rids['view'])) == 0) {
     // Grant view access to all instead of single roles.
@@ -572,11 +572,11 @@ function content_access_optimize_grants(&$grants, $node) {
     }
     foreach (array('view', 'update', 'delete') as $op) {
       if ($grant['grant_' . $op] && in_array($key, $rids[$op])) {
-        //it's still here, so we can't remove this grant
+        // it's still here, so we can't remove this grant.
         continue 2;
       }
     }
-    //ok, remove it
+    // ok, remove it.
     unset($grants[$key]);
   }
 }
@@ -706,4 +706,12 @@ function _content_access_remove_acls($type) {
   foreach ($result as $node) {
     acl_node_clear_acls($node->nid, 'content_access');
   }
+}
+
+/**
+ * Deprecated function.
+ */
+function content_access_proccess_grant($grant, $gid, $node) {
+  watchdog_deprecated_function('content_access', __FUNCTION__);
+  return content_access_process_grant($grant, $gid, $node);
 }
