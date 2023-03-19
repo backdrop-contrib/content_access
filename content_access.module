@@ -148,7 +148,8 @@ function content_access_node_access_records($node) {
       }
     }
     foreach ($grants as $rid => $grant) {
-      $grants[$rid] = content_access_process_grant($grant, $rid, $node);
+      $gid = content_access_get_gid_from_role($rid, 'process');
+      $grants[$rid] = content_access_process_grant($grant, $gid, $node);
     }
 
     // Care for the author grant.
@@ -333,8 +334,9 @@ function content_access_get_type_grant($node) {
 
     // Only process the 'view' op as node_access() will take care of edit and delete.
     foreach (content_access_get_settings('view', $node->type) as $rid) {
+      $gid = content_access_get_gid_from_role($rid, 'process');
       $grants[$rid]['grant_view'] = 1;
-      $grants[$rid] = content_access_process_grant($grants[$rid], $rid, $node);
+      $grants[$rid] = content_access_process_grant($grants[$rid], $gid, $node);
     }
     $defaults[$node->type] = $grants;
   }
@@ -355,7 +357,7 @@ function content_access_get_type_grant($node) {
  */
 function content_access_process_grant($grant, $gid, $node) {
   $grant += array('grant_view' => 0, 'grant_update' => 0, 'grant_delete' => 0, 'realm' => 'content_access_rid');
-  $grant['gid'] = content_access_get_gid_from_role($gid, 'process');
+  $grant['gid'] = $gid;
   $grant['priority'] = content_access_get_settings('priority', $node->type);
   return $grant;
 }
@@ -538,7 +540,11 @@ function content_access_delete_per_node_settings($node) {
  *   The grants are compared with the normal access control settings.
  */
 function content_access_optimize_grants(&$grants, $node) {
-  $rids = array('view' => array(), 'update' => array(), 'delete' => array());
+  $rids = array(
+    'view' => array(),
+    'update' => array(),
+    'delete' => array(),
+  );
 
   foreach ($grants as $key => $grant) {
     foreach (array('view', 'update', 'delete') as $op) {
