@@ -392,6 +392,25 @@ function content_access_get_gid_from_role($role, $process) {
 }
 
 /**
+ * Get a role from a numeric gid.
+ * todo: cache?
+ */
+function content_access_get_role_from_gid($gid = 0) {
+  if ($gid === 0) {
+    $role = 'anonymous';
+  }
+  else {
+    $config = config('content_access.settings');
+    $gids = $config->get('gids');
+    $gids = array_flip($gids);
+    if (!empty($gids[$gid])) {
+      $role = $gids[$gid];
+    }
+  }
+  return $role;
+}
+
+/**
  * Determines the grant for the node author and the given allowed roles of a operation.
  *
  * @param $any_roles
@@ -633,7 +652,7 @@ function content_access_node_access_explain($row) {
       return t('Content access: author of the content can access');
 
     case 'content_access_rid':
-      return t('Content access: %role can access', array('%role' => $roles[$row->gid]));
+      return t('Content access: %role can access', array('%role' => content_access_get_role_from_gid($row->gid)));
   }
 }
 
