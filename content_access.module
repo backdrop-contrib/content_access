@@ -426,6 +426,9 @@ function content_access_own_op($node, $any_roles, $own_roles) {
     if ($node->uid > 0) {
       $roles[$node->uid] = user_load($node->uid)->roles;
     }
+    else {
+      $roles[$node->uid] = array(BACKDROP_ANONYMOUS_ROLE);
+    }
   }
   if (array_intersect($roles[$node->uid], $any_roles)) {
     // If there is access due to "any permissions" there is no need to at an author grant.
