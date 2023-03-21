@@ -396,6 +396,7 @@ function content_access_get_gid_from_role($role, $process) {
  * todo: cache?
  */
 function content_access_get_role_from_gid($gid = 0) {
+  $role = FALSE;
   if ($gid === 0) {
     $role = 'anonymous';
   }
@@ -639,11 +640,6 @@ function content_access_node_type_update($info) {
  * Implements hook_node_access_explain().
  */
 function content_access_node_access_explain($row) {
-  static $roles;
-
-  if (!isset($roles)) {
-    $roles = user_roles();
-  }
   if (!$row->gid && $row->realm == 'content_access_rid') {
     return t('Content access: No access is granted.');
   }
@@ -652,7 +648,11 @@ function content_access_node_access_explain($row) {
       return t('Content access: author of the content can access');
 
     case 'content_access_rid':
-      return t('Content access: %role can access', array('%role' => content_access_get_role_from_gid($row->gid)));
+      $role = content_access_get_role_from_gid($row->gid);
+      if (!$role) {
+        $role = t('Unknown role');
+      }
+      return t('Content access: %role can access', array('%role' => $role));
   }
 }
 
