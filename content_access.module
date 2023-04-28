@@ -29,7 +29,7 @@ function content_access_help($path, $arg) {
       return $output;
   }
 }
-          
+
 /**
  * Implements hook_admin_paths().
  */
@@ -688,4 +688,27 @@ function content_access_node_export_after_import_alter(array $nodes) {
   }
   // Rebuild content access permissions
   node_access_rebuild();
+}
+
+/**
+ * Implements hook_user_update().
+ */
+function content_access_user_update(&$edit, $account, $category) {
+  // Act only if roles have changed.
+  if (!isset($edit['roles'])) {
+    return false;
+  }
+  if (array_diff_key($edit['roles'], $edit['original']->roles) ||
+      array_diff_key($edit['original']->roles, $edit['roles'])
+    ) {
+    // Check if user owns any nodes.
+    $uid = $account->uid;
+    $q = db_select('node', 'n')
+      ->fields('n', array('nid'))
+      ->condition('n.uid', $uid, '=');
+    $count = $q->countQuery()->execute()->fetchField();
+    if ($count > 0) {
+      node_access_needs_rebuild(TRUE);
+    }
+  }
 }
