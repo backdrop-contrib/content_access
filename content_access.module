@@ -506,7 +506,7 @@ function content_access_get_per_node_settings($node) {
     if (!$settings) {
       return array();
     }
-    return unserialize($settings);
+    return json_decode($settings, TRUE);
   }
 }
 
