@@ -86,7 +86,7 @@ function content_access_update_2000() {
 
   foreach ($result as $per_node_setting) {
     $changed = 0;
-    $setting_array = unserialize($per_node_setting->settings);
+    $setting_array = json_decode($per_node_setting->settings, TRUE);
     $nid = $per_node_setting->nid;
     foreach ($setting_array as $access_permission => $access_settings) {
       foreach ($access_settings as $key => $user_role) {
