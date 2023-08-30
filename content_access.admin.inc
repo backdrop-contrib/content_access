@@ -41,7 +41,11 @@ function content_access_page($form, &$form_state, $node) {
       acl_node_add_acl($node->nid, $acl_id, (int) ($op == 'view'), (int) ($op == 'update'), (int) ($op == 'delete'), content_access_get_settings('priority', $node->type));
 
       $form['acl'][$op] = acl_edit_form($form_state, $acl_id, t('Grant !op access', array('!op' => $op)));
-      $form['acl'][$op]['#collapsed'] = !isset($_POST['acl_' . $acl_id]) && !unserialize($form['acl'][$op]['user_list']['#default_value']);
+
+      $data = acl_edit_form_get_user_list($form['acl'][$op], TRUE);
+      if (!isset($_POST['acl_' . $acl_id]) && !$data) {
+        $form['acl'][$op]['#collapsed'] = TRUE;
+      }
     }
   }
 

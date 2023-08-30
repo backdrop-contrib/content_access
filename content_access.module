@@ -441,7 +441,7 @@ function content_access_get_per_node_settings($node) {
     if (!$settings) {
       return array();
     }
-    return unserialize($settings);
+    return json_decode($settings, TRUE);
   }
 }
 
@@ -456,12 +456,12 @@ function content_access_save_per_node_settings($node, $settings) {
   if ($count > 0) {
     db_update('content_access')
       ->condition('nid', $node->nid)
-      ->fields(array('settings' => serialize($settings)))
+      ->fields(array('settings' => json_encode($settings)))
       ->execute();
   }
   else {
     db_insert('content_access')
-      ->fields(array('nid' => $node->nid, 'settings' => serialize($settings)))
+      ->fields(array('nid' => $node->nid, 'settings' => json_encode($settings)))
       ->execute();
   }
 
