@@ -306,7 +306,7 @@ function content_access_action_reset_node_permissions($node) {
  */
 function _content_access_rules_check_setting($node) {
   $type = $node->type;
-  $per_node = config_get('content_access_' . $type, 'per_node');
+  $per_node = config_get('content_access.settings', 'content_access_' . $type . '.per_node');
 
   if ($per_node) {
     return TRUE;
