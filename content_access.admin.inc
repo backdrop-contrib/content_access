@@ -5,11 +5,6 @@
  */
 
 /**
- * Specifies the threshold until we try to mass update node grants immediately.
- */
-define('CONTENT_ACCESS_MASS_UPDATE_THRESHOLD', 1000);
-
-/**
  * Per node settings page.
  */
 function content_access_page($form, &$form_state, $node) {
@@ -347,4 +342,72 @@ function content_access_user_admin_perm_submit($form, $form_state) {
       array('@types' => implode(', ', $types))
     ));
   }
+}
+
+/**
+ * Global settings form for Content Access module.
+ *
+ * @param $form
+ * @param $form_state
+ *
+ * @return mixed
+ */
+function content_access_global_settings($form, &$form_state) {
+  if (!variable_get('content_access_silent_rebuild', FALSE)) {
+    drupal_set_message("Please be aware of disabling background rebuild option or running the website without regular cron jobs makes the contents' permissions unreliable. In this case, site administrator has to run the rebuild process manually when a user's role is being changed.", 'warning');
+  }
+
+  $form['content_access_silent_rebuild'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Allow background permission rebuild'),
+    '#description' => t('Rebuild permissions in the background during cron runs. This is recommended on sites with more than @threshold nodes/pages. Permission rebuilding may take longer, but it will prevent 403 errors for some users. (This requires a <a href="@cron-url" target="_blank">properly configured cron job</a>.)<br /><strong>Note:</strong> If you check this box, role changes will <em>not</em> have immediate effect on role based content access, but will only take place after cron has been run.',
+      array(
+        '@threshold' => number_format(CONTENT_ACCESS_MASS_UPDATE_THRESHOLD),
+        '@cron-url' => 'https://www.drupal.org/docs/7/setting-up-cron/overview',
+      )
+    ),
+    '#default_value' => variable_get('content_access_silent_rebuild', TRUE),
+  );
+
+  if ($data = content_access_get_rebuild_data()) {
+    $form['rebuild_permission'] = array(
+      '#markup' => t('You can run the !link from here. !count record(s) are waited for to be processed.',
+        array(
+          '!link' => l('rebuild permission process', 'admin/config/system/content_access/rebuild'),
+          '!count' => count($data),
+        )
+      ),
+    );
+  }
+
+  return system_settings_form($form);
+}
+
+/**
+ *
+ * Menu callback: confirm rebuilding of permissions.
+ * @param $form
+ * @param $form_state
+ *
+ * @return void
+ */
+function content_access_rebuild_confirm($form, &$form_state) {
+  return confirm_form(
+    array(),
+    t("Are you sure you want to rebuild the pending permissions on site's contents?"),
+    'admin/config/system/content_access',
+    t('This action will rebuild pending permissions on site content, and may be a lengthy process. This action cannot be undone.'),
+    t('Rebuild permissions'),
+    t('Cancel')
+  );
+}
+
+/**
+ * Handler for wipe confirmation
+ *
+ * @see node_configure_rebuild_confirm()
+ */
+function content_access_rebuild_confirm_submit($form, &$form_state) {
+  content_access_rebuild_permission(TRUE);
+  $form_state['redirect'] = 'admin/config/system/content_access';
 }

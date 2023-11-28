@@ -1,7 +1,7 @@
 name = Content Access
 description = Provides flexible content access control.
 core = 7.x
-php = 5.6
 package = Access control
+configure = admin/config/system/content_access
 files[] = tests/content_access.test
 files[] = tests/content_access_acl.test

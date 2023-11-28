@@ -5,6 +5,11 @@
  */
 
 /**
+ * Specify the threshold for mass updates of node grants.
+ */
+define('CONTENT_ACCESS_MASS_UPDATE_THRESHOLD', 1000);
+
+/**
  * Implements hook_help().
  */
 function content_access_help($path, $arg) {
@@ -70,6 +75,30 @@ function content_access_menu() {
     'weight' => 1,
   );
 
+  // Module settings.
+  $items['admin/config/system/content_access'] = array(
+    'title' => 'Content Access',
+    'description' => 'Allow background permissions rebuild.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('content_access_global_settings'),
+    'access arguments' => array('rebuild node access permission'),
+    'file' => 'content_access.admin.inc',
+  );
+  $items['admin/config/system/content_access/settings'] = array(
+    'title' => 'Content Access settings',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'file' => 'content_access.admin.inc',
+  );
+  // Batch process.
+  $items['admin/config/system/content_access/rebuild'] = array(
+    'title' => 'Rebuild permissions',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('content_access_rebuild_confirm'),
+    'access arguments' => array('rebuild node access permission'),
+    'type' => MENU_CALLBACK,
+    'file' => 'content_access.admin.inc',
+  );
+
   return $items;
 }
 
@@ -85,6 +114,10 @@ function content_access_permission() {
     'grant own content access' => array(
       'title' => t('Grant own content access'),
       'description' => t('View and modify content access for own nodes'),
+    ),
+    'rebuild node access permission' => array(
+      'title' => t('Rebuild node access permissions'),
+      'description' => t('Allow users to rebuild access permissions for nodes'),
     ),
   );
 }
@@ -706,9 +739,177 @@ function content_access_user_update(&$edit, $account, $category) {
     $q = db_select('node', 'n')
       ->fields('n', array('nid'))
       ->condition('n.uid', $uid, '=');
-    $count = $q->countQuery()->execute()->fetchField();
-    if ($count > 0) {
-      node_access_needs_rebuild(TRUE);
+    $nids = $q->execute()->fetchCol();
+    if (count($nids) > 0) {
+      $values = array();
+      foreach ($nids as $nid) {
+        $values[] = array(
+          'nid' => $nid,
+          'uid' => $uid,
+          'timestamp' => REQUEST_TIME,
+        );
+      }
+      $query = db_insert('content_access_node_access_rebuild')
+        ->fields(array('nid', 'uid', 'timestamp'));
+      foreach ($values as $record) {
+        $query->values($record);
+      }
+      $query->execute();
+      if (!variable_get('content_access_silent_rebuild', TRUE) && user_access('rebuild node access permission')) {
+        // Avoid duplicated warning messages.
+        drupal_get_messages('warning');
+        drupal_set_message(t('Since the background rebuild is disabled for Content Access module, please <a href="!run-link">run rebuild process</a> manually to make content permissions up-to-date.', array("!run-link" => '/admin/config/system/content_access/rebuild')), 'warning');
+      }
     }
   }
+}
+
+/**
+ * Implements hook_cron().
+ */
+function content_access_cron() {
+  if (variable_get('content_access_silent_rebuild', TRUE)) {
+    content_access_rebuild_permission();
+  }
+}
+
+function content_access_get_rebuild_data() {
+  $query = db_select('content_access_node_access_rebuild', 'canar')
+    ->fields('canar', array('nid', 'uid'))
+    ->orderBy('timestamp');
+  $results = $query->execute()->fetchAll(PDO::FETCH_ASSOC);
+  // Remove possible duplications.
+  $results = array_unique($results, SORT_REGULAR);
+  return $results;
+}
+
+/**
+ *
+ * Rebuild node access permissions.
+ *
+ * @param $batch_mode
+ *   Set to TRUE to process in 'batch' mode, spawning processing over several
+ *   HTTP requests (thus avoiding the risk of PHP timeout if the site has a
+ *   large number of nodes).
+ *   hook_update_N() and form submit handlers are safe contexts to use the
+ *   'batch mode'. Hooks and automated cases (such as calls from hook_user,
+ *   hook_taxonomy, etc.) should consider using the non-batch mode.
+ *
+ * @return void|boolean
+ */
+function content_access_rebuild_permission($batch_mode = FALSE) {
+  $data = content_access_get_rebuild_data();
+  if (!$data) {
+    return FALSE;
+  }
+  if (count(module_implements('node_grants'))) {
+    if ($batch_mode) {
+      $batch = array(
+        'title' => t('Rebuilding content access permissions'),
+        'operations' => array(
+          array('content_access_rebuild_batch_operation', array($data)),
+        ),
+        'finished' => 'content_access_rebuild_batch_finished'
+      );
+      batch_set($batch);
+    }
+    else {
+      // Try to allocate enough time to rebuild node grants.
+      drupal_set_time_limit(240);
+      // Set the max records for the current process.
+      if (count($data) > CONTENT_ACCESS_MASS_UPDATE_THRESHOLD) {
+        $data = array_slice($data, 0, CONTENT_ACCESS_MASS_UPDATE_THRESHOLD);
+      }
+      $data = array_chunk($data, 100);
+      foreach ($data as $set) {
+        $nids = array_column($set, 'nid');
+        db_delete('node_access')
+          ->condition('nid', $nids, 'IN')
+          ->execute();
+        foreach ($set as $record) {
+          $node = node_load($record['nid'], NULL, TRUE);
+          // To preserve database integrity, only acquire grants if the node
+          // loads successfully.
+          if (!empty($node)) {
+            node_access_acquire_grants($node);
+            db_delete('content_access_node_access_rebuild')
+              ->condition('nid', $record['nid'])
+              ->condition('uid', $record['uid'])
+              ->execute();
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Batch process to rebuild permission for updated nodes.
+ *
+ * @param $data
+ * @param $context
+ *
+ * @return void
+ */
+function content_access_rebuild_batch_operation($data, &$context) {
+  if (empty($context['sandbox'])) {
+    // Initiate multistep processing.
+    $context['sandbox']['progress'] = 0;
+    $context['sandbox']['data'] = $data;
+    $context['sandbox']['max'] = count($data);
+  }
+
+  // Process the 20 nodes / round.
+  $limit = 20;
+  $dataset = array_splice($context['sandbox']['data'], 0, $limit);
+  $nids = array_column($dataset, 'nid');
+  $nodes = node_load_multiple($nids, array(), TRUE);
+  db_delete('node_access')
+    ->condition('nid', $nids, 'IN')
+    ->execute();
+  foreach ($dataset as $record) {
+    // To preserve database integrity, only acquire grants if the node
+    // loads successfully.
+    if (!empty($nodes[$record['nid']])) {
+      node_access_acquire_grants($nodes[$record['nid']]);
+      db_delete('content_access_node_access_rebuild')
+        ->condition('nid', $record['nid'])
+        ->condition('uid', $record['uid'])
+        ->execute();
+    }
+    $context['sandbox']['progress']++;
+    $context['message'] = t('Now processing %current of of %max',
+      array(
+        '%current' => $context['sandbox']['progress'],
+        '%max' => $context['sandbox']['max'],
+      )
+    );
+  }
+
+  // Multistep processing : report progress.
+  if ($context['sandbox']['progress'] < $context['sandbox']['max']) {
+    $context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['max'];
+  }
+  else {
+    $context['finished'] = 1;
+  }
+}
+
+/**
+ * Batch finishing info after rebuild permission.
+ *
+ * @param $success
+ * @param $results
+ * @param $operations
+ *
+ * @return void
+ */
+function content_access_rebuild_batch_finished($success, $results, $operations) {
+  if ($success) {
+    drupal_set_message(t('The content access permissions have been rebuilt.'));
+  }
+  else {
+    drupal_set_message(t('The content access permissions have not been properly rebuilt.'), 'error');
+  }
+  cache_clear_all();
 }
