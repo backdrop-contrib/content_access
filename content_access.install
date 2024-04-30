@@ -51,6 +51,16 @@ function content_access_schema() {
  * Implements hook_update_last_removed().
  */
 function content_access_update_last_removed() {
+
+  // Fix a potential error in the schema version from an earlier release.
+  $schema_version = backdrop_get_installed_schema_version('content_access');
+  if ($schema_version == 2000) {
+    backdrop_set_installed_schema_version('content_access', 1002);
+  }
+  elseif ($schema_version == 2001) {
+    backdrop_set_installed_schema_version('content_access', 1003);
+  }
+
   return 7101;
 }
 
@@ -82,7 +92,7 @@ function content_access_update_1001() {
 /**
  * Run role name update on per node permissions, if needed.
  */
-function content_access_update_2000() {
+function content_access_update_1002() {
   $result = db_query('SELECT * FROM {content_access}');
 
   foreach ($result as $per_node_setting) {
@@ -115,7 +125,7 @@ function content_access_update_2000() {
 /**
  * Convert settings from serialize to json_encode.
  */
-function content_access_update_2001() {
+function content_access_update_1003() {
   $settings = db_query('SELECT nid, settings FROM {content_access}');
   foreach ($settings as $setting) {
     $setting_array = unserialize($setting->settings);
