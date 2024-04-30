@@ -6,24 +6,6 @@
  */
 
 /**
- * Implements hook_requirements().
- */
-function content_access_requirements($phase) {
-  $requirements = array();
-  if ($phase == 'runtime') {
-    // Fix a potential error in the schema version from an earlier release.
-    $schema_version = backdrop_get_installed_schema_version('content_access');
-    if ($schema_version == 2000) {
-      backdrop_set_installed_schema_version('content_access', 1002);
-    }
-    elseif ($schema_version == 2001){
-      backdrop_set_installed_schema_version('content_access', 1003);
-    }
-  }
-  return $requirements;
-}
-
-/**
  * Implements hook_install().
  */
 function content_access_install() {
@@ -69,6 +51,16 @@ function content_access_schema() {
  * Implements hook_update_last_removed().
  */
 function content_access_update_last_removed() {
+
+  // Fix a potential error in the schema version from an earlier release.
+  $schema_version = backdrop_get_installed_schema_version('content_access');
+  if ($schema_version == 2000) {
+    backdrop_set_installed_schema_version('content_access', 1002);
+  }
+  elseif ($schema_version == 2001) {
+    backdrop_set_installed_schema_version('content_access', 1003);
+  }
+
   return 7101;
 }
 
