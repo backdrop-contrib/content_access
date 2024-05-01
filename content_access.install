@@ -161,7 +161,16 @@ function content_access_update_1002() {
  */
 function content_access_update_1003() {
   $settings = db_query('SELECT nid, settings FROM {content_access}');
+  $tested = FALSE;
   foreach ($settings as $setting) {
+    if (!$tested) {
+      $json_test = json_decode($setting->settings);
+      if (json_last_error() === JSON_ERROR_NONE) {
+        // It appears these settings have already been converted to JSON.
+        break;
+      }
+      $tested = TRUE;
+    }
     $setting_array = unserialize($setting->settings);
     db_update('content_access')
       ->fields(array(
