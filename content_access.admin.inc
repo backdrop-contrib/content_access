@@ -366,7 +366,8 @@ function content_access_global_settings($form, &$form_state) {
     backdrop_set_message("Please be aware of disabling background rebuild option or running the website without regular cron jobs makes the contents' permissions unreliable. In this case, site administrator has to run the rebuild process manually when a user's role is being changed.", 'warning');
   }
 
-  $form['content_access_silent_rebuild'] = array(
+  $form['#config'] = 'content_access.settings';
+  $form['silent_rebuild'] = array(
     '#type' => 'checkbox',
     '#title' => t('Allow background permission rebuild'),
     '#description' => t('Rebuild permissions in the background during cron runs. This is recommended on sites with more than @threshold nodes/pages. Permission rebuilding may take longer, but it will prevent 403 errors for some users. (This requires a <a href="@cron-url" target="_blank">properly configured cron job</a>.)<br /><strong>Note:</strong> If you check this box, role changes will <em>not</em> have immediate effect on role based content access, but will only take place after cron has been run.',
