@@ -5,11 +5,6 @@
  */
 
 /**
- * Specifies the threshold until we try to mass update node grants immediately.
- */
-define('CONTENT_ACCESS_MASS_UPDATE_THRESHOLD', 1000);
-
-/**
  * Per node settings page.
  */
 function content_access_page($form, &$form_state, $node) {
@@ -19,13 +14,13 @@ function content_access_page($form, &$form_state, $node) {
     $defaults[$op] = content_access_per_node_setting($op, $node);
   }
 
-  // Get roles form
+  // Get roles form.
   content_access_role_based_form($form, $defaults, $node->type);
 
   // Add an after_build handler that disables checkboxes, which are enforced by permissions.
   $form['per_role']['#after_build'] = array('content_access_force_permissions');
 
-  // ACL form
+  // ACL form.
   if (module_exists('acl')) {
     // This is disabled when there is no node passed.
     $form['acl'] = array(
@@ -69,7 +64,7 @@ function content_access_page($form, &$form_state, $node) {
   // @todo not true anymore?
   // http://drupal.org/update/modules/6/7#hook_node_access_records
   if (!$node->status) {
-    backdrop_set_message(t("Warning: Your content is not published, so this settings are not taken into account as long as the content remains unpublished."), 'error');
+    backdrop_set_message(t("Warning: Your content is not published, so these settings are not taken into account as long as the content remains unpublished."), 'error');
   }
 
   return $form;
@@ -122,7 +117,7 @@ function content_access_admin_settings($form, &$form_state, $content_type) {
 
   $form_state['type'] = $type;
 
-  // Add role based per content type settings
+  // Add role based per content type settings.
   $defaults = array();
   foreach (_content_access_get_operations() as $op => $label) {
     $defaults[$op] = content_access_get_settings($op, $type);
@@ -202,7 +197,7 @@ function content_access_admin_settings_submit($form, &$form_state) {
   }
   content_access_save_permissions($roles_permissions);
 
-  // Update content access settings
+  // Update content access settings.
   $settings = content_access_get_settings('all', $type);
   foreach (content_access_available_settings() as $setting) {
     if (isset($form_state['values'][$setting])) {
@@ -289,7 +284,7 @@ function content_access_role_based_form(&$form, $defaults = array(), $type = NUL
   $operations = _content_access_get_operations($type);
   $roles = array_map('filter_xss_admin', user_roles());
   foreach ($operations as $op => $label) {
-    // Make sure defaults are set properly
+    // Make sure defaults are set properly.
     $defaults += array($op => array());
 
     $form['per_role'][$op] = array(
@@ -341,7 +336,7 @@ function content_access_user_admin_perm_submit($form, $form_state) {
     foreach (_content_access_get_node_permissions($type) as $perm) {
       foreach (user_roles() as $rid => $role) {
         if (isset($form_state['values'][$rid]) && in_array($perm, $form['checkboxes'][$rid]['#default_value']) != in_array($perm, $form_state['values'][$rid])) {
-          //permission changed!
+          // Permission changed!
           $types[$type] = node_get_types('name', $type);
           continue 2;
         }
@@ -355,4 +350,73 @@ function content_access_user_admin_perm_submit($form, $form_state) {
       array('@types' => implode(', ', $types))
     ));
   }
+}
+
+/**
+ * Global settings form for Content Access module.
+ *
+ * @param $form
+ * @param $form_state
+ *
+ * @return mixed
+ */
+function content_access_global_settings($form, &$form_state) {
+  $silent_rebuild = config_get('content_access.settings', 'silent_rebuild');
+  if (!$silent_rebuild) {
+    backdrop_set_message("Please be aware of disabling background rebuild option or running the website without regular cron jobs makes the contents' permissions unreliable. In this case, site administrator has to run the rebuild process manually when a user's role is being changed.", 'warning');
+  }
+
+  $form['content_access_silent_rebuild'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Allow background permission rebuild'),
+    '#description' => t('Rebuild permissions in the background during cron runs. This is recommended on sites with more than @threshold nodes/pages. Permission rebuilding may take longer, but it will prevent 403 errors for some users. (This requires a <a href="@cron-url" target="_blank">properly configured cron job</a>.)<br /><strong>Note:</strong> If you check this box, role changes will <em>not</em> have immediate effect on role based content access, but will only take place after cron has been run.',
+      array(
+        '@threshold' => number_format(CONTENT_ACCESS_MASS_UPDATE_THRESHOLD),
+        '@cron-url' => 'https://docs.backdropcms.org/documentation/setting-up-cron',
+      )
+    ),
+    '#default_value' => $silent_rebuild,
+  );
+
+  if ($data = content_access_get_rebuild_data()) {
+    $form['rebuild_permission'] = array(
+      '#markup' => t('You can run the !link from here. !count record(s) are waited for to be processed.',
+        array(
+          '!link' => l('rebuild permission process', 'admin/config/system/content_access/rebuild'),
+          '!count' => count($data),
+        )
+      ),
+    );
+  }
+
+  return system_settings_form($form);
+}
+
+/**
+ *
+ * Menu callback: confirm rebuilding of permissions.
+ * @param $form
+ * @param $form_state
+ *
+ * @return void
+ */
+function content_access_rebuild_confirm($form, &$form_state) {
+  return confirm_form(
+    array(),
+    t("Are you sure you want to rebuild the pending permissions on site's contents?"),
+    'admin/config/system/content_access',
+    t('This action will rebuild pending permissions on site content, and may be a lengthy process. This action cannot be undone.'),
+    t('Rebuild permissions'),
+    t('Cancel')
+  );
+}
+
+/**
+ * Handler for wipe confirmation
+ *
+ * @see node_configure_rebuild_confirm()
+ */
+function content_access_rebuild_confirm_submit($form, &$form_state) {
+  content_access_rebuild_permission(TRUE);
+  $form_state['redirect'] = 'admin/config/system/content_access';
 }
