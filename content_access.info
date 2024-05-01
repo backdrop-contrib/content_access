@@ -3,3 +3,4 @@ description = Provides flexible content access control.
 package = Access control
 backdrop = 1.x
 type = module
+configure = admin/config/system/content_access

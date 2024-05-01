@@ -44,6 +44,42 @@ function content_access_schema() {
     ),
     'primary key' => array('nid'),
   );
+  $schema['content_access_node_access_rebuild'] = array(
+    'description' => 'Store node access permissions which are waiting to be rebuilt.',
+    'fields' => array(
+      'nid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'uid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'timestamp' => array(
+        'description' => 'The Unix timestamp of when the permission change was requested.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'foreign keys' => array(
+      'nid' => array(
+        'table' => 'node',
+        'columns' => array('nid' => 'nid'),
+      ),
+      'uid' => array(
+        'table' => 'users',
+        'columns' => array('uid' => 'uid'),
+      ),
+    ),
+    'indexes' => array(
+      'nid' => array('nid'),
+      'uid' => array('uid'),
+    ),
+  );
+
   return $schema;
 }
 
@@ -61,7 +97,7 @@ function content_access_update_last_removed() {
     backdrop_set_installed_schema_version('content_access', 1003);
   }
 
-  return 7101;
+  return 7104;
 }
 
 /**
@@ -69,13 +105,11 @@ function content_access_update_last_removed() {
  */
 function content_access_update_1000() {
   $config = config('content_access.settings');
-  $config->set('content_access_article', update_variable_get('content_access_article'));
-  $config->set('content_access_page', update_variable_get('content_access_page'));
+  $config->set('silent_rebuild', update_variable_get('content_access_silent_rebuild', TRUE));
   $config->save();
 
   // Delete variables.
-  update_variable_del('content_access_article');
-  update_variable_del('content_access_page');
+  update_variable_del('content_access_silent_rebuild');
 }
 
 /**
@@ -136,4 +170,24 @@ function content_access_update_1003() {
       ->condition('nid', $setting->nid, '=')
       ->execute();
   }
+}
+
+/**
+ * Add a new table to handle pending rebuild permissions tasks. Clean up config.
+ */
+function content_access_update_1004() {
+  if (!db_table_exists('content_access_node_access_rebuild')) {
+    $schema = content_access_schema();
+    db_create_table('content_access_node_access_rebuild', $schema['content_access_node_access_rebuild']);
+  }
+  $config = config('content_access.settings');
+  // Ensure a value for silent_rebuild is set.
+  $silent_rebuild = $config->get('silent_rebuild');
+  if ($silent_rebuild == NULL) {
+    $config->set('silent_rebuild', TRUE);
+  }
+  // Remove unused config values.
+  $config->clear('content_access_article');
+  $config->clear('content_access_page');
+  $config->save();
 }

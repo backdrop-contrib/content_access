@@ -1,7 +1,6 @@
 {
     "_config_name": "content_access.settings",
-    "content_access_article": [],
-    "content_access_page": [],
+    "silent_rebuild": 1,
     "gids": {
         "anonymous": 111,
         "authenticated": 222,
