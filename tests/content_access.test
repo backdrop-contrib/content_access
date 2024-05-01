@@ -9,17 +9,6 @@ require_once backdrop_get_path('module', 'content_access') . '/tests/content_acc
 
 class ContentAccessModuleTestCase extends ContentAccessTestCase {
 
-  /**
-   * Implements get_info() for information.
-   */
-  public static function getInfo() {
-    return array(
-      'name' => t('Content Access Module Tests'),
-      'description' => t('Various tests to check permission settings on nodes.'),
-      'group' => t('Content Access'),
-    );
-  }
-
   public function setUp($module = '') {
     parent::setUp();
 
