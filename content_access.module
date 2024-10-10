@@ -653,7 +653,7 @@ function content_access_optimize_grants(&$grants, $node) {
  */
 function content_access_node_type_delete($info) {
   $config = config('content_access.settings');
-  $config->delete('content_access_' . $info->type);
+  $config->clear('content_access_' . $info->type);
   $config->save();
 }
 
