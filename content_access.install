@@ -200,3 +200,12 @@ function content_access_update_1004() {
   $config->clear('content_access_page');
   $config->save();
 }
+
+/**
+ * Enable notice to rebuild node access permissions since a new node access
+ * realm was added to respect the core "view any unpublished content"
+ * permission.
+ */
+function content_access_update_1005() {
+  node_access_needs_rebuild(TRUE);
+}
