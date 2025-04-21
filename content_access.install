@@ -97,7 +97,7 @@ function content_access_update_last_removed() {
     backdrop_set_installed_schema_version('content_access', 1003);
   }
 
-  return 7104;
+  return 7103;
 }
 
 /**
