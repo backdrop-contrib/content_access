@@ -105,7 +105,16 @@ function content_access_update_last_removed() {
  */
 function content_access_update_1000() {
   $config = config('content_access.settings');
+
+  // Migrate the content_access_silent_rebuild variable to config.
   $config->set('silent_rebuild', update_variable_get('content_access_silent_rebuild', TRUE));
+
+  // Update Drupal 7 content type variables to Backdrop config.
+  $node_types = node_type_get_types();
+  foreach ($node_types as $type) {
+    $config->set('content_access_' . $type->type, update_variable_get('content_access_' . $type->type, array()));
+    update_variable_del('content_access_' . $type->type);
+  }
   $config->save();
 
   // Delete variables.
