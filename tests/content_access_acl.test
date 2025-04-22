@@ -12,18 +12,6 @@ class ContentAccessACLTestCase extends ContentAccessTestCase {
   public $node;
 
   /**
-   * Implementation of get_info() for information
-   */
-  public static function getInfo() {
-    return array(
-      'name' => t('Content Access Module with ACL Module Tests'),
-      'description' => t('Various tests to check the combination of content access and ACL module.'),
-      'group' => 'Content Access',
-      'dependencies' => array('acl'),
-    );
-  }
-
-  /**
    * Setup configuration before each test
    */
   public function setUp($addedmodules = array()) {
