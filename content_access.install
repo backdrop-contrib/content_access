@@ -194,11 +194,8 @@ function content_access_update_1004() {
   $silent_rebuild = $config->get('silent_rebuild');
   if ($silent_rebuild == NULL) {
     $config->set('silent_rebuild', TRUE);
+    $config->save();
   }
-  // Remove unused config values.
-  $config->clear('content_access_article');
-  $config->clear('content_access_page');
-  $config->save();
 }
 
 /**
